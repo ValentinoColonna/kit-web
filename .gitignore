@@ -4,3 +4,8 @@ __pycache__/
 auditoria.md
 auditoria.html
 pagespeed-*.json
+# trabajos y archivos de clientes: no se versionan
+entrada/*
+!entrada/LEEME.md
+webs/*
+!webs/LEEME.md

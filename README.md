@@ -1,10 +1,22 @@
-# Recurso abierto · «Rehice la web de un negocio con IA»
+# kit-web · Rehacé la web de un negocio con IA
 
-Lo que te llevás del video de Valentino IA, sin pedir nada a cambio. Es una **skill** (una carpeta con instrucciones que entienden Claude, ChatGPT, Codex y otras IAs) más tres scripts que corren con Python 3, sin instalar nada.
+Lo que te llevás del video de Valentino IA, sin pedir nada a cambio. Abrís la carpeta con Claude Code, escribís «hola» y te pide el link de la web vieja del negocio. Con eso audita la web, arma la página nueva con scroll animado, la valida, la revisa en celular y te la deja lista para publicar gratis.
+
+## Cómo se usa
+
+1. **Code → Download ZIP**, descomprimilo y abrí la carpeta con Claude Code (la app de Claude, pestaña Code, o VS Code con la extensión).
+2. Escribí **«hola»** y pasale el link de la web actual. Si no tenés link, dejá el `.html` en `entrada/`; si el negocio no tiene web, decile el nombre y el rubro.
+3. Contestá lo que te pregunte y dejá el logo y las fotos en `entrada/` si las tenés. Al final te dice qué carpeta arrastrar a Netlify Drop.
+
+Funciona con Sonnet. Necesitás Python 3 (en Mac ya viene) y Google Chrome para las capturas de revisión. La guía corta está en `EMPIEZA-AQUI.md`.
+
+## Qué hay adentro
 
 | Qué | Dónde | Para qué |
 |---|---|---|
-| La skill `rehacer-web` | `rehacer-web/SKILL.md` | Los seis pasos: auditar, brief, generar, validar, publicar, medir |
+| Instrucciones de arranque | `CLAUDE.md` | Lo que hace Claude Code cuando escribís «hola» |
+| La skill `rehacer-web` | `rehacer-web/SKILL.md` | Los siete pasos: auditar, brief, fotos, generar, validar, publicar, medir |
+| Carpetas de trabajo | `entrada/` y `webs/` | Lo que traés (HTML, logo, fotos) y cada web nueva, en su carpeta |
 | Auditor de la web vieja | `rehacer-web/scripts/auditar_web.py` | Te dice qué tiene y qué le falta a la web actual (celular, WhatsApp, Google, peso). Con `--html` genera un informe visual para mostrarle al dueño y el «teaser»: los 3 hallazgos para abrir la conversación |
 | Validador de la web nueva | `rehacer-web/scripts/validar_sitio.py` | Chequea el `index.html` antes de publicarlo |
 | Medidor de PageSpeed | `rehacer-web/scripts/medir_pagespeed.py` | El antes y el después, con clave gratuita de Google o a mano |
@@ -16,18 +28,19 @@ Lo que te llevás del video de Valentino IA, sin pedir nada a cambio. Es una **s
 | Cómo publicar | `rehacer-web/references/publicar-netlify.md` | Netlify Drop, gratis, y dominio propio |
 | Checklist | `rehacer-web/references/checklist.md` | Para tildar |
 
-## En tres comandos
+## Sin Claude Code (los scripts solos)
 
 ```
 python3 rehacer-web/scripts/auditar_web.py https://la-web-vieja.com --html
-python3 rehacer-web/scripts/validar_sitio.py index.html
+python3 rehacer-web/scripts/validar_sitio.py webs/<negocio>/index.html
 python3 rehacer-web/scripts/medir_pagespeed.py https://la-web-nueva.netlify.app --etiqueta despues
 ```
 
-## Para usarla como skill
+## En otras herramientas (todavía sin probar)
+Lo probado es Claude Code. La skill sigue el formato estándar de skills, así que debería servir en otros lados, pero no lo comprobamos:
 - **Claude.ai:** Customize → Skills → subir la carpeta `rehacer-web` como ZIP.
-- **Claude Code o Codex:** copiar `rehacer-web/` en `.claude/skills/` o `.agents/skills/` del proyecto.
-- **ChatGPT:** pegar el `SKILL.md` como instrucciones de un proyecto, o usar el prompt abierto directo.
+- **Codex u otro agente:** copiar `rehacer-web/` en la carpeta de skills del proyecto.
+- **ChatGPT:** pegar `rehacer-web/SKILL.md` como instrucciones de un proyecto, junto con el esqueleto y el brief.
 
 ## Qué no hace
 - No inventa datos del negocio: lo que el dueño no dijo, no va.

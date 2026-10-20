@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 rehacer-web/scripts/auditar_web.py:*)",
+      "Bash(python3 rehacer-web/scripts/validar_sitio.py:*)",
+      "Bash(python3 rehacer-web/scripts/medir_pagespeed.py:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(sips:*)",
+      "Bash(ls:*)",
+      "Read(./**)"
+    ]
+  }
+}

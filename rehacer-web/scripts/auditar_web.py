@@ -3,7 +3,8 @@
 """Audita la web actual de un negocio y escribe auditoria.md.
 
 Uso:
-    python3 auditar_web.py https://la-web-vieja.com [--salida auditoria.md]
+    python3 auditar_web.py https://la-web-vieja.com [--salida auditoria.md] [--html]
+    python3 auditar_web.py entrada/web-vieja.html [--salida auditoria.md] [--html]   (si el dueño pasa el archivo en vez del link)
 
 Mira lo que un cliente mira desde el celular y lo que Google mira: título, descripción, viewport, HTTPS,
 teléfono y WhatsApp a un toque, dirección, horarios, redes, imágenes sin texto alternativo, peso de la página
@@ -12,6 +13,7 @@ que carga todo por JS, lo dice y el resultado es parcial.
 """
 import argparse
 import html
+import os
 import re
 import ssl
 import sys
@@ -39,12 +41,15 @@ class Lector(HTMLParser):
         self.scripts_inline = 0
         self.jsonld = []
         self._en_jsonld = False
+        self._en_codigo = 0
         self.texto = []
         self.viewport = None
         self.lang = None
         self.forms = 0
 
     def handle_starttag(self, tag, attrs):
+        if tag in ("script", "style"):
+            self._en_codigo += 1
         a = dict(attrs)
         if tag == "html" and a.get("lang"):
             self.lang = a["lang"]
@@ -77,8 +82,9 @@ class Lector(HTMLParser):
             self._en_title = False
         if tag in ("h1", "h2"):
             self._en = None
-        if tag == "script":
+        if tag in ("script", "style"):
             self._en_jsonld = False
+            self._en_codigo = max(0, self._en_codigo - 1)
 
     def handle_data(self, data):
         if self._en_title:
@@ -89,7 +95,7 @@ class Lector(HTMLParser):
             self.h2.append(data.strip())
         if self._en_jsonld:
             self.jsonld.append(data)
-        if data.strip():
+        if data.strip() and not self._en_codigo:
             self.texto.append(data.strip())
 
 
@@ -107,7 +113,31 @@ def bajar(url):
         return url, None, {}, b"", time.time() - t0, str(e)
 
 
+def pagina_de_contacto(p, url_final):
+    """Si la web tiene una página de contacto en el mismo dominio, la baja para sacar teléfono, dirección y horarios."""
+    base = urllib.parse.urlparse(url_final)
+    for l in p.links:
+        if re.search(r"contact", l, re.I) and not l.lower().startswith(("mailto:", "tel:")):
+            destino = urllib.parse.urljoin(url_final, l)
+            if urllib.parse.urlparse(destino).netloc.replace("www.", "") == base.netloc.replace("www.", "") and destino.rstrip("/") != url_final.rstrip("/"):
+                _, status, _, cuerpo, _, _ = bajar(destino)
+                if cuerpo:
+                    q = Lector()
+                    try:
+                        q.feed(cuerpo.decode("utf-8", "ignore"))
+                    except Exception:
+                        pass
+                    return destino, q
+    return None, None
+
+
 def auditar(url):
+    if os.path.isfile(url):
+        with open(url, "rb") as f:
+            cuerpo = f.read()
+        h = {"url": os.path.basename(url), "url_final": "archivo local", "status": 200, "segundos": 0.0, "bytes": len(cuerpo), "error": None, "local": True}
+        headers = {}
+        return analizar(h, cuerpo)
     if not re.match(r"^https?://", url):
         url = "https://" + url
     final, status, headers, cuerpo, segundos, error = bajar(url)
@@ -121,6 +151,10 @@ def auditar(url):
     if not cuerpo:
         p = Lector()
         return h, "", "", p, [("ERROR", f"No se pudo cargar la web: {h['error'] or h['status']}. Revisá la dirección; si el dominio no responde, el negocio hoy no tiene web que funcione")], ""
+    return analizar(h, cuerpo)
+
+
+def analizar(h, cuerpo):
     texto_html = cuerpo.decode("utf-8", "ignore")
     p = Lector()
     try:
@@ -136,7 +170,10 @@ def auditar(url):
 
     titulo = html.unescape(p.title.strip())
     desc = html.unescape(p.metas.get("description", "")).strip()
-    falta(h["url_final"].startswith("https://") and not h.get("sin_https"), "Carga por HTTPS (candado)", "No carga por HTTPS: el navegador la marca como no segura")
+    if h.get("local"):
+        hallazgos.append(("INFO", "Archivo local: HTTPS y velocidad no se miden (hace falta el link publicado)"))
+    else:
+        falta(h["url_final"].startswith("https://") and not h.get("sin_https"), "Carga por HTTPS (candado)", "No carga por HTTPS: el navegador la marca como no segura")
     falta(bool(p.viewport), f"Tiene viewport para celular ({p.viewport})", "No tiene viewport: en el celular se ve como una web de escritorio achicada")
     falta(10 <= len(titulo) <= 70, f"Título: «{titulo}» ({len(titulo)} caracteres)", f"Título ausente o fuera de medida: «{titulo}» ({len(titulo)} caracteres; ideal 10 a 70)")
     falta(50 <= len(desc) <= 170, f"Descripción para Google: «{desc[:90]}…» ({len(desc)} caracteres)", f"Descripción para Google ausente o fuera de medida ({len(desc)} caracteres; ideal 50 a 170)")
@@ -160,7 +197,8 @@ def auditar(url):
     falta(bool(p.lang), f"Idioma declarado: {p.lang}", "No declara el idioma de la página")
     kb = h["bytes"] / 1024
     falta(kb < 300, f"Página de {kb:.0f} KB de HTML", f"HTML de {kb:.0f} KB (pesado para una página de negocio)")
-    hallazgos.append(("INFO", f"Respondió en {h['segundos']} s (solo el HTML, sin imágenes ni scripts)"))
+    if not h.get("local"):
+        hallazgos.append(("INFO", f"Respondió en {h['segundos']} s (solo el HTML, sin imágenes ni scripts)"))
     hallazgos.append(("INFO", f"Scripts externos: {len(p.scripts_ext)} · formularios: {p.forms}"))
     tech = []
     bajo = texto_html.lower()
@@ -171,9 +209,55 @@ def auditar(url):
         hallazgos.append(("INFO", "Tecnología visible: " + ", ".join(tech)))
     if len(texto) < 200:
         hallazgos.append(("AVISO", "Casi no hay texto en el HTML: puede ser una web que carga todo por JavaScript; esta auditoría es parcial"))
+    if not h.get("local"):
+        destino, q = pagina_de_contacto(p, h["url_final"] or h["url"])
+        if q is not None:
+            h["contacto"] = destino
+            p.links += [l for l in q.links if l not in p.links]
+            texto = texto + " | " + " ".join(q.texto)
+            hallazgos.append(("INFO", f"Se leyó también la página de contacto ({destino}) para sacar los datos del negocio"))
     palabras = len(texto.split())
     hallazgos.append(("INFO", f"Texto visible: unas {palabras} palabras"))
     return h, titulo, desc, p, hallazgos, texto
+
+
+def datos_de_contacto(p, texto):
+    """Lo que la web vieja ya dice del negocio, para proponer el brief (siempre a confirmar con el dueño)."""
+    d = {}
+    tels, vistos = [], set()
+    for m in re.finditer(r"\+?\d[\d\s().-]{6,}\d", re.sub(r"\s{2,}", " | ", texto)):
+        crudo = m.group(0).strip()
+        digitos = re.sub(r"\D", "", crudo)
+        if re.fullmatch(r"(?:(?:19|20)\d{2}\s*)+", crudo):
+            continue  # años, no teléfonos
+        if ":" in crudo or not (8 <= len(digitos) <= 15) or digitos in vistos:
+            continue
+        vistos.add(digitos)
+        tels.append(crudo)
+    tels += [l[4:] for l in p.links if l.lower().startswith("tel:") and re.sub(r"\D", "", l[4:]) not in vistos]
+    if tels:
+        d["Teléfonos"] = tels[:6]
+    wa = []
+    for l in p.links:
+        m = re.search(r"(?:wa\.me/|phone=)(\d{8,15})", l)
+        if m and m.group(1) not in wa:
+            wa.append(m.group(1))
+    if wa:
+        d["WhatsApp (de los enlaces)"] = wa
+    mails = sorted(set(re.findall(r"[\w.+-]+@[\w-]+\.[\w.-]+", texto)) | {l[7:] for l in p.links if l.lower().startswith("mailto:")})
+    if mails:
+        d["Emails"] = mails[:4]
+    frases = re.split(r"(?<=[.!?|•·\n])\s+|\s{2,}", texto)
+    dirs = [m.group(0).strip(" -,.") for m in re.finditer(r"\b(?:Av\.?|Avda\.?|Avenida|Calle|Ruta|Bv\.?|Boulevard|Diagonal)\s+[^\d\n]{2,40}?\d{1,5}[^.\n]{0,70}", texto)]
+    if dirs:
+        d["Posible dirección"] = list(dict.fromkeys(dirs))[:3]
+    hor = [f.strip() for f in frases if re.search(r"\b(lunes|martes|miércoles|jueves|viernes|sábado|sabado|domingo|horario|hs\.?|hrs)\b", f, re.I) and re.search(r"\d", f) and len(f) < 200]
+    if hor:
+        d["Posibles horarios"] = list(dict.fromkeys(hor))[:4]
+    redes = sorted({l for l in p.links if any(r in l.lower() for r in ["instagram.com", "facebook.com", "tiktok.com", "linkedin.com", "youtube.com"])})
+    if redes:
+        d["Redes"] = redes[:6]
+    return d
 
 
 def escribir(ruta, h, titulo, desc, p, hallazgos, texto):
@@ -185,7 +269,19 @@ def escribir(ruta, h, titulo, desc, p, hallazgos, texto):
     lineas += [f"**Resumen:** {ok} cosas bien · **{faltas} cosas que faltan** (abajo, marcadas FALTA).", "", "| Estado | Qué |", "|---|---|"]
     for e, m in hallazgos:
         lineas.append(f"| {e} | {m} |")
-    lineas += ["", "## Lo que dice la web (para el brief)", "", f"- **Título:** {titulo or '(vacío)'}", f"- **Descripción:** {desc or '(vacía)'}", f"- **H1:** {' / '.join(p.h1) or '(ninguno)'}", f"- **H2:** {' / '.join(x for x in p.h2 if x)[:300] or '(ninguno)'}", "", "Primeras 600 letras del texto visible:", "", "> " + texto[:600].replace("\n", " "), "", "## Cómo usar esto", "", "Cada FALTA es un punto para el brief y para la página nueva. Las INFO son contexto. Lo que la web dice del negocio se confirma con el dueño antes de reutilizarlo."]
+    lineas += ["", "## Lo que dice la web (para el brief)", "", f"- **Título:** {titulo or '(vacío)'}", f"- **Descripción:** {desc or '(vacía)'}", f"- **H1:** {' / '.join(p.h1) or '(ninguno)'}", f"- **H2:** {' / '.join(x for x in p.h2 if x)[:300] or '(ninguno)'}", "", "Primeras 600 letras del texto visible:", "", "> " + texto[:600].replace("\n", " "), ""]
+    datos = datos_de_contacto(p, texto)
+    lineas += ["## Datos del negocio que dice la web vieja (confirmar con el dueño)", ""]
+    if datos:
+        for k, v in datos.items():
+            lineas.append(f"- **{k}:** " + " · ".join(v))
+    else:
+        lineas.append("- No se encontraron teléfonos, emails, dirección ni horarios en el texto.")
+    base = ruta[:-3] if ruta.endswith(".md") else ruta
+    ruta_txt = base + "-texto-web-vieja.txt"
+    with open(ruta_txt, "w", encoding="utf-8") as f:
+        f.write(texto)
+    lineas += ["", f"El texto visible completo quedó en `{os.path.basename(ruta_txt)}`, para armar el brief.", "", "## Cómo usar esto", "", "Cada FALTA es un punto para el brief y para la página nueva. Las INFO son contexto. Lo que la web dice del negocio se confirma con el dueño antes de reutilizarlo."]
     with open(ruta, "w", encoding="utf-8") as f:
         f.write("\n".join(lineas) + "\n")
     return ok, faltas
@@ -237,7 +333,7 @@ footer{{color:var(--neutro);font-size:.85rem;margin-top:32px}}
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("url")
+    ap.add_argument("url", help="link de la web vieja o ruta a un archivo .html")
     ap.add_argument("--salida", default="auditoria.md")
     ap.add_argument("--html", action="store_true", help="además, escribe auditoria.html (informe visual para mostrar al dueño)")
     a = ap.parse_args()
