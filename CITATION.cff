@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+title: "rehacer-web: kit para rehacer la web de un negocio con IA"
+authors:
+  - family-names: Colonna
+    given-names: Valentino
+license: MIT
+date-released: "2026-10-20"
+url: "https://github.com/ValentinoColonna/kit-web"

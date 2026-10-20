@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<!--
+ESQUELETO · rehacer-web · versión espectáculo con imágenes y catálogo
+Mecánica YA HECHA y probada con el gate visual: GSAP + ScrollTrigger, hero con máscara y foto de fondo enmascarada con parallax,
+marquee, sección horizontal pineada, catálogo con fotos, contadores reales, papel que se firma, foto grande que se revela,
+banda de galería con tilt, mapa estilizado, botones magnéticos, nav sin blur, barra de progreso, degradación sin JS, reduced-motion,
+imágenes swap-ready (assets/hero-salon.jpg, salon.jpg, galeria-01..05.jpg, catalogo-01..NN.jpg; si faltan, el marco muestra un panel).
+Tu trabajo: completar los slots {{...}} con el brief, repetir el ítem del catálogo por cada ítem REAL, adaptar nombres de sección al
+rubro, sacar lo que no aplique y reemplazar el «momento firma» (el papel que se firma) por uno propio del negocio con los mismos recursos.
+Reglas: no inventes datos; lo que falte queda como [PLACEHOLDER] visible (validá con --borrador); no agregues librerías;
+no backdrop-filter en la nav; no gsap.to dentro de mousemove; estados iniciales ocultos solo en gsap.set.
+Al terminar: python3 scripts/validar_sitio.py index.html y el gate de references/gate-visual.md.
+-->
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITULO_SEO: nombre + qué hace + ciudad, 10 a 70 caracteres}}</title>
+<meta name="description" content="{{DESCRIPCION_SEO: una frase de 50 a 170 caracteres con qué hace, para quién y dónde}}">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family={{FUENTE_DISPLAY}}:wght@400;600;800&family={{FUENTE_TEXTO}}:wght@400;500;600&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"{{TIPO_SCHEMA: LocalBusiness o subtipo}}","name":"{{NOMBRE}}","url":"{{URL}}","telephone":"{{TELEFONO_INTERNACIONAL}}","email":"{{EMAIL}}","address":{"@type":"PostalAddress","streetAddress":"{{CALLE_Y_NUMERO}}","addressLocality":"{{LOCALIDAD}}","addressRegion":"{{PROVINCIA}}","postalCode":"{{CP}}","addressCountry":"AR"},"openingHours":["{{HORARIO_SCHEMA_1}}","{{HORARIO_SCHEMA_2}}"]}
+</script>
+<style>
+/* ===== Sistema cerrado: base carbón azulada cálida, UN acento ámbar (faro), secundario acero con cuentagotas ===== */
+:root{--bg:{{FONDO: off-black cálido}};--bg2:{{FONDO2}};--ink:#eef1f4;--ink2:#aab4c0;--muted:#6f7c8a;--acc:{{ACENTO}};--acc2:{{SECUNDARIO}};--ok:#2fb36b;--wa:#25d366;--r:18px;--r2:12px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:{{FUENTE_TEXTO}},system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px;line-height:1.6;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+::selection{background:var(--acc);color:#1a1206}
+h1,h2,h3{font-family:{{FUENTE_DISPLAY}},{{FUENTE_TEXTO}},sans-serif;letter-spacing:-.02em;text-wrap:balance;margin:0}
+a{color:inherit}
+.skip{position:absolute;left:-999px;top:8px;background:var(--acc);color:#1a1206;padding:8px 12px;border-radius:8px;z-index:99}.skip:focus{left:8px}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+section{scroll-margin-top:72px}
+.grano{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.045;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.progreso{position:fixed;left:0;top:0;height:3px;width:100%;transform:scaleX(0);transform-origin:0 50%;background:linear-gradient(90deg,var(--acc),#ffd08a);z-index:50}
+
+/* ===== Nav: fondo sólido, sin blur (performance) ===== */
+nav{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(12,17,24,.0);transition:background .4s,padding .4s}
+nav.compacta{background:rgba(12,17,24,.97);padding:10px 20px;box-shadow:0 10px 30px rgba(240,168,74,.06)}
+nav .marca{font-family:Sora;font-weight:800;font-size:1.05rem;text-decoration:none}
+nav .marca small{display:block;font-family:Inter;font-weight:500;font-size:.72rem;color:var(--ink2);letter-spacing:.08em;text-transform:uppercase}
+nav .links{display:none;gap:22px;font-size:.92rem;color:var(--ink2)}nav .links a{text-decoration:none}nav .links a:hover{color:var(--ink)}
+@media(min-width:900px){nav .links{display:flex}}
+.btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:600;padding:13px 20px;border-radius:999px;font-size:1rem;position:relative;will-change:transform}
+.btn-acc{background:var(--acc);color:#1a1206;box-shadow:0 10px 30px rgba(240,168,74,.25)}
+.btn-wa{background:var(--wa);color:#07140b;box-shadow:0 10px 30px rgba(37,211,102,.22)}
+.btn-ghost{color:var(--ink);border:1px solid rgba(238,241,244,.18)}
+.btn-ghost:hover{border-color:rgba(238,241,244,.4)}
+
+/* ===== Hero: momento firma. Titular con reveal de máscara, faros que barren, auto en marcha hecho de líneas ===== */
+.hero{min-height:100svh;position:relative;display:grid;align-items:end;padding:120px 20px 60px;overflow:hidden;isolation:isolate}
+.hero .blob{position:absolute;border-radius:50%;filter:blur(60px);z-index:-1;will-change:transform}
+.hero .b1{width:62vw;height:62vw;max-width:760px;max-height:760px;right:-20vw;top:-18vw;background:radial-gradient(circle,rgba(240,168,74,.28),rgba(240,168,74,0) 65%)}
+.hero .b2{width:46vw;height:46vw;max-width:520px;max-height:520px;left:-14vw;bottom:-10vw;background:radial-gradient(circle,rgba(59,110,165,.35),rgba(59,110,165,0) 65%)}
+.hero .grid{position:absolute;inset:0;z-index:-1;background-image:linear-gradient(rgba(238,241,244,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(238,241,244,.06) 1px,transparent 1px);background-size:56px 56px;mask-image:radial-gradient(ellipse at 60% 70%,#000 20%,transparent 70%);-webkit-mask-image:radial-gradient(ellipse at 60% 70%,#000 20%,transparent 70%)}
+.ruta{position:absolute;left:0;right:0;bottom:0;height:34vh;z-index:-1;overflow:hidden}
+.ruta svg{position:absolute;left:0;bottom:0;width:100%;height:100%}
+.hero .cont{max-width:1120px;width:100%;margin:0 auto}
+.pill{display:inline-flex;align-items:center;gap:8px;font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);border:1px solid rgba(238,241,244,.14);padding:7px 12px;border-radius:999px;margin-bottom:22px}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(47,179,107,.6);animation:lat 2.4s ease-out infinite}
+@keyframes lat{to{box-shadow:0 0 0 12px rgba(47,179,107,0)}}
+.hero h1{font-size:clamp(2.3rem,7vw,5.4rem);line-height:.98;font-weight:800;max-width:14ch}
+.hero h1 .ln{display:block;overflow:hidden}.hero h1 .ln span{display:block;will-change:transform}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--acc),#ffd08a);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.sub{max-width:52ch;color:var(--ink2);font-size:1.12rem;margin:22px 0 30px}
+.hero .ctas{display:flex;flex-wrap:wrap;gap:12px}
+.hero .dato{position:absolute;right:20px;top:120px;display:none;flex-direction:column;gap:10px}
+@media(min-width:900px){.hero .dato{display:flex}}
+.chip{background:rgba(238,241,244,.04);border:1px solid rgba(238,241,244,.09);border-radius:var(--r2);padding:12px 16px;font-size:.92rem;color:var(--ink2);min-width:220px}
+.chip b{display:block;color:var(--ink);font-family:Sora;font-size:1.4rem;line-height:1.1}
+
+/* ===== Marquee ===== */
+.marquee{border-top:1px solid rgba(238,241,244,.08);border-bottom:1px solid rgba(238,241,244,.08);padding:14px 0;overflow:hidden;white-space:nowrap;font-family:Sora;font-weight:600;font-size:.95rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink2)}
+.marquee .track{display:inline-block;will-change:transform}
+.marquee span{display:inline-block;padding:0 28px}.marquee span::after{content:"•";color:var(--acc);margin-left:28px}
+
+/* ===== Secciones ===== */
+.sec{padding:96px 20px;position:relative}
+.wrap{max-width:1120px;margin:0 auto}
+.kicker{color:var(--acc);font-weight:600;letter-spacing:.1em;text-transform:uppercase;font-size:.8rem;margin-bottom:14px;display:block}
+h2{font-size:clamp(1.8rem,4.2vw,3rem);font-weight:800;line-height:1.05;max-width:20ch}
+.lead{color:var(--ink2);font-size:1.1rem;max-width:56ch;margin-top:16px}
+
+/* Horizontal pineada: qué hacemos */
+.hz{position:relative}
+.hz .pista{display:flex;gap:18px;will-change:transform;padding:40px 0 18px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.hz .pista::-webkit-scrollbar{display:none}
+.hz .pista .card{scroll-snap-align:start}
+@media(min-width:900px){.js .hz .pista{overflow:visible}}
+.card{flex:0 0 min(78vw,420px);background:rgba(238,241,244,.04);border:1px solid rgba(238,241,244,.09);border-radius:var(--r);padding:28px;min-height:280px;display:flex;flex-direction:column;justify-content:space-between;transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .35s,box-shadow .35s}
+.card:hover{transform:translateY(-6px);border-color:rgba(240,168,74,.45);box-shadow:0 24px 60px rgba(240,168,74,.10)}
+.card .n{font-family:Sora;font-weight:800;font-size:3rem;color:rgba(240,168,74,.35);line-height:1}
+.card h3{font-size:1.35rem;margin:18px 0 8px}.card p{color:var(--ink2);margin:0}
+@media(min-width:900px){.hz{height:100vh;display:flex;align-items:center}.hz .wrap{width:100%}}
+
+/* Garantías: contadores reales + tarjeta que se firma */
+.garantias .grid2{display:grid;grid-template-columns:1fr;gap:28px;align-items:center}
+@media(min-width:900px){.garantias .grid2{grid-template-columns:1.1fr .9fr}}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:30px}
+.num{border-left:2px solid rgba(240,168,74,.5);padding-left:14px}
+.num b{display:block;font-family:Sora;font-size:clamp(2rem,5vw,3.2rem);font-weight:800;line-height:1}
+.num small{color:var(--ink2);font-size:.9rem}
+.papel{background:linear-gradient(160deg,#f7f3ea,#efe7d6);color:#1a1a1a;border-radius:var(--r);padding:30px;box-shadow:0 30px 80px rgba(0,0,0,.35),0 0 0 1px rgba(240,168,74,.2);transform:rotate(-1.5deg);position:relative;font-family:Inter}
+.papel h3{font-family:Sora;font-size:1.1rem;letter-spacing:.06em;text-transform:uppercase;color:#4a3a1a}
+.papel ul{padding-left:18px;margin:14px 0 20px;color:#333}.papel li{margin:6px 0}
+.papel .firma{display:flex;align-items:flex-end;justify-content:space-between;border-top:1px dashed rgba(0,0,0,.25);padding-top:14px;font-size:.85rem;color:#555}
+.papel svg{width:120px;height:44px}.papel svg path{fill:none;stroke:#1a2a40;stroke-width:2.2;stroke-linecap:round;stroke-dasharray:420;stroke-dashoffset:0}
+.papel .sello{position:absolute;right:22px;top:18px;width:74px;height:74px;border:3px solid rgba(190,60,40,.7);border-radius:50%;color:rgba(190,60,40,.8);font-family:Sora;font-weight:800;font-size:.62rem;display:grid;place-items:center;text-align:center;transform:rotate(12deg);letter-spacing:.04em}
+
+/* Dónde: mapa estilizado */
+.donde .grid2{display:grid;grid-template-columns:1fr;gap:28px}
+@media(min-width:900px){.donde .grid2{grid-template-columns:1fr 1fr}}
+.mapa{position:relative;border-radius:var(--r);border:1px solid rgba(238,241,244,.09);background:var(--bg2);min-height:300px;overflow:hidden}
+.mapa svg{position:absolute;inset:0;width:100%;height:100%}
+.mapa .pin{position:absolute;left:56%;top:48%;transform:translate(-50%,-100%)}
+.mapa .pin i{display:block;width:16px;height:16px;border-radius:50% 50% 50% 0;background:var(--acc);transform:rotate(-45deg);box-shadow:0 8px 20px rgba(240,168,74,.5)}
+.mapa .pin span{position:absolute;left:50%;top:-34px;transform:translateX(-50%);white-space:nowrap;background:var(--acc);color:#1a1206;font-weight:700;font-size:.8rem;padding:4px 10px;border-radius:999px}
+.horas{display:grid;gap:10px;margin-top:20px}
+.horas div{display:flex;justify-content:space-between;border-bottom:1px solid rgba(238,241,244,.08);padding:10px 0;color:var(--ink2)}.horas div b{color:var(--ink);font-weight:600}
+
+/* Contacto */
+.contacto{text-align:center}
+.contacto h2{margin:0 auto}
+.contacto .ctas{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:28px}
+.contacto p.mail{margin-top:18px;color:var(--ink2)}
+footer{padding:30px 20px 100px;text-align:center;color:var(--muted);font-size:.85rem;border-top:1px solid rgba(238,241,244,.08)}
+.wa-fijo{position:fixed;right:16px;bottom:16px;z-index:45}
+
+
+/* ===== Imágenes integradas (swap-ready): si falta el archivo, el marco muestra un panel del sistema, no un hueco ===== */
+.foto{position:relative;overflow:hidden;border-radius:var(--r);background:linear-gradient(160deg,rgba(59,110,165,.28),rgba(240,168,74,.18) 60%,rgba(12,17,24,.9));isolation:isolate}
+.foto img{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(.92) contrast(1.04);transform:scale(1.12);will-change:transform}
+.foto::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,17,24,0) 40%,rgba(12,17,24,.72));pointer-events:none}
+.foto .pie{position:absolute;left:18px;right:18px;bottom:16px;z-index:2;font-size:.92rem;color:var(--ink);display:flex;justify-content:space-between;align-items:end;gap:12px}
+.foto .pie small{color:var(--ink2);display:block;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase}
+.foto.sin img{display:none}
+.foto.sin::before{content:attr(data-nombre);position:absolute;inset:0;display:grid;place-items:center;color:rgba(238,241,244,.35);font-family:Sora;font-weight:600;font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;text-align:center;padding:20px;background-image:radial-gradient(rgba(238,241,244,.09) 1px,transparent 1px);background-size:14px 14px}
+/* Hero con foto de fondo enmascarada */
+.hero .fondo{position:absolute;inset:0;z-index:-2;overflow:hidden}
+.hero .fondo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,17,24,.35),rgba(12,17,24,.55) 55%,rgba(12,17,24,.92))}
+.hero .fondo img{width:100%;height:100%;object-fit:cover;opacity:.42;transform:scale(1.15);will-change:transform;mask-image:linear-gradient(180deg,rgba(0,0,0,.9),rgba(0,0,0,.35) 60%,transparent);-webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.9),rgba(0,0,0,.35) 60%,transparent)}
+.hero .fondo.sin img{display:none}
+/* Salón: imagen que se revela con clip-path y texto al lado */
+.salon .grid2{display:grid;grid-template-columns:1fr;gap:28px;align-items:center}
+@media(min-width:900px){.salon .grid2{grid-template-columns:1fr 1fr}}
+.salon .foto{aspect-ratio:4/3}
+/* Banda de galería: desfila con el scroll y cada foto se inclina con el mouse */
+.galeria{overflow:hidden;padding:40px 0 80px}
+.galeria .banda{display:flex;gap:16px;width:max-content;will-change:transform;padding:0 20px}
+.galeria .foto{flex:0 0 min(70vw,360px);aspect-ratio:3/4;transition:transform .35s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d}
+.galeria .foto:nth-child(even){aspect-ratio:4/3;align-self:center;flex-basis:min(78vw,420px)}
+@media(max-width:899px){.galeria .banda{width:auto;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}.galeria .banda::-webkit-scrollbar{display:none}.galeria .foto{scroll-snap-align:center}}
+
+
+/* ===== Catálogo (ítems reales de la web vieja; fotos ilustrativas hasta que lleguen las del dueño) ===== */
+.catalogo .grid3{display:grid;grid-template-columns:1fr;gap:16px;margin-top:28px}
+@media(min-width:700px){.catalogo .grid3{grid-template-columns:repeat(2,1fr)}}
+@media(min-width:1000px){.catalogo .grid3{grid-template-columns:repeat(3,1fr)}}
+.item{background:rgba(238,241,244,.04);border:1px solid rgba(238,241,244,.09);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .35s,box-shadow .35s}
+.item:hover{transform:translateY(-6px);border-color:rgba(240,168,74,.45);box-shadow:0 24px 60px rgba(240,168,74,.10)}
+.item .foto{border-radius:0;aspect-ratio:4/3}
+.item .foto img{transform:scale(1.02);transition:transform 1.2s cubic-bezier(.2,.8,.2,1)}
+.item:hover .foto img{transform:scale(1.1)}
+.item .foto .tag{position:absolute;left:14px;top:14px;z-index:2;background:rgba(12,17,24,.78);color:var(--ink);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;padding:5px 9px;border-radius:999px;border:1px solid rgba(238,241,244,.14)}
+.item .foto .tag.okm{background:rgba(240,168,74,.92);color:#1a1206;border-color:transparent}
+.item .texto{padding:16px 18px 18px;display:flex;flex-direction:column;gap:6px;flex:1}
+.item h3{font-size:1.1rem;line-height:1.25}
+.item .det{color:var(--ink2);font-size:.92rem}
+.item .pie2{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:12px}
+.item .precio{font-family:Sora;font-weight:600;color:var(--acc);font-size:.95rem}
+.item .btn{padding:9px 14px;font-size:.9rem}
+.catalogo .nota{color:var(--muted);font-size:.85rem;margin-top:14px}
+
+/* Reveals: los estados iniciales ocultos los fija GSAP (gsap.set), nunca el CSS. Sin JS, o si el CDN falla, la web se ve completa. */
+@media(prefers-reduced-motion:reduce){.pill i{animation:none}}
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add('js');</script>
+<a class="skip" href="#hacemos">Saltar al contenido</a>
+<div class="grano" aria-hidden="true"></div>
+<div class="progreso" aria-hidden="true"></div>
+
+<nav id="nav">
+  <a class="marca" href="#inicio">{{NOMBRE}}<small>{{LOCALIDAD_CORTA}}</small></a>
+  <div class="links"><a href="#hacemos">Qué hacemos</a><a href="#catalogo">Catálogo</a><a href="#garantias">Garantías</a><a href="#salon">Salón</a><a href="#donde">Dónde</a><a href="#contacto">Contacto</a></div>
+  <a class="btn btn-acc mag" href="tel:{{TELEFONO_TEL}}">Llamar</a>
+</nav>
+
+<header class="hero" id="inicio">
+  <div class="fondo" aria-hidden="true"><img src="assets/hero-salon.jpg" alt="" onerror="this.parentElement.classList.add('sin')"></div>
+  <div class="blob b1" aria-hidden="true"></div><div class="blob b2" aria-hidden="true"></div><div class="grid" aria-hidden="true"></div>
+  <div class="ruta" aria-hidden="true">
+    <svg viewBox="0 0 1200 300" preserveAspectRatio="none">
+      <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#f0a84a" stop-opacity="0"/><stop offset=".5" stop-color="#f0a84a" stop-opacity=".9"/><stop offset="1" stop-color="#f0a84a" stop-opacity="0"/></linearGradient></defs>
+      <path d="M0 260 C 300 255, 500 200, 1200 140" stroke="rgba(238,241,244,.10)" stroke-width="1.5" fill="none"/>
+      <path d="M0 290 C 300 285, 500 235, 1200 180" stroke="rgba(238,241,244,.06)" stroke-width="1.5" fill="none"/>
+      <path id="faro" d="M0 275 C 300 270, 500 218, 1200 160" stroke="url(#g)" stroke-width="3" fill="none" stroke-dasharray="260 1400"/>
+    </svg>
+  </div>
+  <div class="cont">
+    <span class="pill"><i></i> {{PILL}}</span>
+    <h1><span class="ln"><span>{{TITULAR_LINEA_1}}</span></span><span class="ln"><span>{{TITULAR_LINEA_2 con <em>palabra clave</em>}}</span></span><span class="ln"><span>{{TITULAR_LINEA_3}}</span></span></h1>
+    <p class="sub rv">{{SUBTITULO}}</p>
+    <div class="ctas rv">
+      <a class="btn btn-wa mag" href="https://wa.me/{{WHATSAPP}}?text={{MENSAJE_PREARMADO_URLENCODED}}">Escribir por WhatsApp</a>
+      <a class="btn btn-ghost mag" href="#hacemos">Ver qué hacemos ↓</a>
+    </div>
+  </div>
+  <div class="dato">
+    <div class="chip rv"><b>{{DATO_1_NUMERO}}</b>{{DATO_1_TEXTO}}</div>
+    <div class="chip rv"><b>{{DATO_2_NUMERO}}</b>{{DATO_2_TEXTO}}</div>
+  </div>
+</header>
+
+<div class="marquee" aria-hidden="true"><div class="track">{{MARQUEE: 6 <span>, repetidos dos veces}}</div></div>
+
+<section class="sec hz" id="hacemos">
+  <div class="wrap">
+    <span class="kicker rv">Qué hacemos</span>
+    <h2 class="rv">{{TITULO_SERVICIOS}}</h2>
+    <div class="pista">
+      <!-- TARJETA DE SERVICIO: repetí por cada servicio REAL del brief (3 a 5). El botón lleva WhatsApp con mensaje que nombra el servicio -->
+      <article class="card"><div><div class="n">01</div><h3>{{SERVICIO_1_NOMBRE}}</h3><p>{{SERVICIO_1_LINEA}}</p></div><a class="btn btn-ghost" href="https://wa.me/{{WHATSAPP}}?text={{MENSAJE_SERVICIO_1_URLENCODED}}">{{SERVICIO_1_BOTON}}</a></article>
+    </div>
+  </div>
+</section>
+
+<section class="sec catalogo" id="catalogo">
+  <div class="wrap">
+    <span class="kicker rv">Catálogo</span>
+    <h2 class="rv">{{TITULO_CATALOGO}}</h2>
+    <p class="lead rv">{{LEAD_CATALOGO}}</p>
+    <div class="grid3">
+      <!-- ÍTEM DEL CATÁLOGO: repetí este bloque por cada ítem REAL del brief (vehículo, plato, servicio, producto); foto assets/catalogo-0N.jpg -->
+      <article class="item rv"><div class="foto" data-nombre="Foto · assets/catalogo-01.jpg"><img src="assets/catalogo-01.jpg" alt="{{ITEM_1_NOMBRE}}, foto ilustrativa" onerror="this.parentElement.classList.add('sin')"><span class="tag">{{ITEM_1_ETIQUETA}}</span></div>
+        <div class="texto"><h3>{{ITEM_1_NOMBRE}}</h3><div class="det">{{ITEM_1_DETALLE}}</div><div class="pie2"><span class="precio">{{ITEM_1_PRECIO o Consultar}}</span><a class="btn btn-ghost" href="https://wa.me/{{WHATSAPP}}?text={{MENSAJE_ITEM_1_URLENCODED}}">WhatsApp</a></div></div></article>
+    </div>
+    <p class="nota rv">{{NOTA_CATALOGO: p. ej. «Fotos ilustrativas hasta cargar las reales» y enlace al stock completo si existe}}</p>
+  </div>
+</section>
+
+<section class="sec garantias" id="garantias">
+  <div class="wrap grid2">
+    <div>
+      <span class="kicker rv">Por qué elegirnos</span>
+      <h2 class="rv">{{TITULO_MOTIVOS}}</h2>
+      <p class="lead rv">{{LEAD_MOTIVOS}}</p>
+      <div class="nums">
+        <div class="num rv"><b><span class="cnt" data-n="6">6</span></b><small>meses de garantía mecánica</small></div>
+        <div class="num rv"><b><span class="cnt" data-n="3">3</span></b><small>garantías por escrito</small></div>
+        <div class="num rv"><b><span class="cnt" data-n="5">5</span>'</b><small>de la autopista</small></div>
+      </div>
+    </div>
+    <div class="papel rv" aria-label="Garantía por escrito">
+      <div class="sello">{{SELLO}}</div>
+      <h3>{{NOMBRE}} · {{TITULO_PAPEL}}</h3>
+      <ul>{{MOTIVOS_PAPEL: 3 <li>}}</ul>
+      <div class="firma"><span>{{DIRECCION_CORTA}}</span><svg viewBox="0 0 120 44" aria-hidden="true"><path d="M4 30 C 14 8, 22 38, 32 22 S 48 6, 54 26 S 70 40, 78 18 S 96 10, 116 24"/></svg></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec salon" id="salon">
+  <div class="wrap grid2">
+    <div class="foto rv" data-nombre="Foto del salón · assets/salon.jpg"><img src="assets/salon.jpg" alt="{{ALT_FOTO_GRANDE}}" onerror="this.parentElement.classList.add('sin')"><div class="pie"><span><small>{{PIE_FOTO_GRANDE_ETIQUETA}}</small>{{PIE_FOTO_GRANDE}}</span></div></div>
+    <div>
+      <span class="kicker rv">El salón</span>
+      <h2 class="rv">{{TITULO_FOTO_GRANDE}}</h2>
+      <p class="lead rv">{{LEAD_FOTO_GRANDE}}</p>
+      <p class="rv"><a class="btn btn-ghost mag" href="#donde">Cómo llegar ↓</a></p>
+    </div>
+  </div>
+</section>
+
+<section class="galeria" id="galeria" aria-label="{{ARIA_GALERIA: p. ej. Fotos del local y del trabajo}}">
+  <div class="banda">
+    <div class="foto" data-nombre="Foto 1 · assets/galeria-01.jpg"><img src="assets/galeria-01.jpg" alt="{{ALT_GALERIA_1}}" onerror="this.parentElement.classList.add('sin')"><div class="pie"><span><small>{{PIE_GALERIA_1_ETIQUETA}}</small>{{PIE_GALERIA_1}}</span></div></div>
+    <div class="foto" data-nombre="Foto 2 · assets/galeria-02.jpg"><img src="assets/galeria-02.jpg" alt="{{ALT_GALERIA_2}}" onerror="this.parentElement.classList.add('sin')"><div class="pie"><span><small>{{PIE_GALERIA_2_ETIQUETA}}</small>{{PIE_GALERIA_2}}</span></div></div>
+    <div class="foto" data-nombre="Foto 3 · assets/galeria-03.jpg"><img src="assets/galeria-03.jpg" alt="{{ALT_GALERIA_3}}" onerror="this.parentElement.classList.add('sin')"><div class="pie"><span><small>{{PIE_GALERIA_3_ETIQUETA}}</small>{{PIE_GALERIA_3}}</span></div></div>
+    <div class="foto" data-nombre="Foto 4 · assets/galeria-04.jpg"><img src="assets/galeria-04.jpg" alt="{{ALT_GALERIA_4}}" onerror="this.parentElement.classList.add('sin')"><div class="pie"><span><small>{{PIE_GALERIA_4_ETIQUETA}}</small>{{PIE_GALERIA_4}}</span></div></div>
+    <div class="foto" data-nombre="Foto 5 · assets/galeria-05.jpg"><img src="assets/galeria-05.jpg" alt="{{ALT_GALERIA_5}}" onerror="this.parentElement.classList.add('sin')"><div class="pie"><span><small>{{PIE_GALERIA_5_ETIQUETA}}</small>{{PIE_GALERIA_5}}</span></div></div>
+  </div>
+</section>
+
+<section class="sec donde" id="donde">
+  <div class="wrap grid2">
+    <div>
+      <span class="kicker rv">Dónde y cuándo</span>
+      <h2 class="rv">{{DIRECCION_CORTA}}.</h2>
+      <p class="lead rv">{{DIRECCION_COMPLETA_Y_REFERENCIA}} <a href="https://www.google.com/maps/search/?api=1&query={{DIRECCION_URLENCODED}}">Abrir en Google Maps</a></p>
+      <div class="horas rv">{{HORARIOS}}</div>
+    </div>
+    <div class="mapa rv" aria-hidden="true">
+      <svg viewBox="0 0 600 360" preserveAspectRatio="none">
+        <rect width="600" height="360" fill="#121a24"/>
+        <g stroke="rgba(238,241,244,.08)" stroke-width="2" fill="none"><path d="M0 120 H600"/><path d="M0 220 H600"/><path d="M150 0 V360"/><path d="M330 0 V360"/><path d="M480 0 V360"/></g>
+        <path d="M0 170 L600 150" stroke="rgba(240,168,74,.55)" stroke-width="10" fill="none" stroke-linecap="round"/>
+        <text x="20" y="162" fill="rgba(238,241,244,.45)" font-family="Inter" font-size="14">{{MAPA_CALLE}}</text>
+        <path d="M0 60 L600 20" stroke="rgba(59,110,165,.6)" stroke-width="14" fill="none" stroke-linecap="round"/>
+        <text x="20" y="48" fill="rgba(238,241,244,.45)" font-family="Inter" font-size="14">{{MAPA_REFERENCIA: avenida, ruta o autopista cercana}}</text>
+      </svg>
+      <div class="pin"><span>{{NOMBRE}}</span><i></i></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec contacto" id="contacto">
+  <div class="wrap">
+    <span class="kicker rv">Contacto</span>
+    <h2 class="rv">{{TITULO_CONTACTO}}</h2>
+    <div class="ctas rv">
+      <a class="btn btn-wa mag" href="https://wa.me/{{WHATSAPP}}?text={{MENSAJE_PREARMADO_URLENCODED}}">WhatsApp {{WHATSAPP_VISIBLE}}</a>
+      <a class="btn btn-acc mag" href="tel:{{TELEFONO_TEL}}">Teléfono {{TELEFONO_VISIBLE}}</a>
+    </div>
+    <p class="mail rv"><a href="mailto:{{EMAIL}}">{{EMAIL}}</a></p>
+  </div>
+</section>
+
+<a class="wa-fijo btn btn-wa mag" href="https://wa.me/{{WHATSAPP}}?text={{MENSAJE_PREARMADO_URLENCODED}}" aria-label="Escribir por WhatsApp">WhatsApp</a>
+<footer>{{NOMBRE}} · {{DIRECCION_CORTA}} · {{QUE_HACE_CORTO}} · © {{AÑO}}</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  if(!window.gsap||!window.ScrollTrigger){document.documentElement.classList.remove('js');return;}
+  gsap.registerPlugin(ScrollTrigger);
+  gsap.ticker.lagSmoothing(0); /* para que las animaciones avancen también en renders headless */
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce){document.documentElement.classList.remove('js');return;}
+
+  /* Estados iniciales (solo con GSAP cargado): así, sin JS la web se ve completa */
+  gsap.set('.rv',{opacity:0,y:26});
+  gsap.set('.hero h1 .ln span',{yPercent:110});
+  gsap.set('.papel .sello',{scale:0,rotate:12});
+  gsap.set('.papel path',{strokeDashoffset:420});
+  if(document.querySelector('.salon .foto'))gsap.set('.salon .foto',{clipPath:'inset(0 0 0 100% round 18px)'});
+
+  /* Nav compacta */
+  ScrollTrigger.create({start:60,onUpdate:function(s){document.getElementById('nav').classList.toggle('compacta',s.scroll()>60)}});
+  /* Barra de progreso */
+  gsap.to('.progreso',{scaleX:1,ease:'none',scrollTrigger:{start:0,end:'max',scrub:.3}});
+
+  /* Hero: máscara del titular + entrada en carga */
+  var tl=gsap.timeline({defaults:{ease:'power4.out'}});
+  tl.to('.hero h1 .ln span',{yPercent:0,duration:1.1,stagger:.12},.1)
+    .to('.hero .rv',{opacity:1,y:0,duration:.9,stagger:.12},.6);
+  /* Faro que recorre la ruta */
+  gsap.fromTo('#faro',{strokeDashoffset:1660},{strokeDashoffset:-260,duration:4.5,ease:'power2.inOut',repeat:-1,repeatDelay:1.2});
+  /* Blobs con parallax y respiración */
+  gsap.to('.hero .b1',{yPercent:30,ease:'none',scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:true}});
+  gsap.to('.hero .b2',{yPercent:-20,ease:'none',scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:true}});
+  gsap.to('.hero h1',{yPercent:-12,opacity:.35,ease:'none',scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:true}});
+
+  /* Marquee */
+  gsap.to('.marquee .track',{xPercent:-50,ease:'none',duration:28,repeat:-1});
+
+  /* Sección horizontal pineada (solo escritorio) */
+  ScrollTrigger.matchMedia({
+    '(min-width: 900px)':function(){
+      var pista=document.querySelector('.hz .pista');
+      var dist=pista.scrollWidth-pista.parentElement.clientWidth;
+      gsap.to(pista,{x:-dist,ease:'none',scrollTrigger:{trigger:'.hz',start:'top top',end:function(){return '+='+(dist+200)},pin:true,scrub:.6,anticipatePin:1}});
+    },
+    '(max-width: 899px)':function(){
+      gsap.from('.hz .card',{opacity:0,y:30,stagger:.12,duration:.8,scrollTrigger:{trigger:'.hz .pista',start:'top 85%'}});
+    }
+  });
+
+  /* Reveals con stagger por sección */
+  document.querySelectorAll('.sec').forEach(function(sec){
+    var els=sec.querySelectorAll('.rv');
+    if(!els.length)return;
+    gsap.to(els,{opacity:1,y:0,duration:.9,ease:'power3.out',stagger:.1,scrollTrigger:{trigger:sec,start:'top 72%'}});
+  });
+
+  /* Contadores reales */
+  document.querySelectorAll('.cnt').forEach(function(el){
+    var n=parseInt(el.dataset.n,10);
+    ScrollTrigger.create({trigger:el,start:'top 85%',once:true,onEnter:function(){gsap.fromTo(el,{innerText:0},{innerText:n,duration:1.4,ease:'power2.out',snap:{innerText:1}});}});
+  });
+
+  /* Garantía: firma que se dibuja y sello que cae */
+  ScrollTrigger.create({trigger:'.papel',start:'top 70%',once:true,onEnter:function(){
+    gsap.to('.papel path',{strokeDashoffset:0,duration:1.6,ease:'power2.inOut',delay:.3});
+    gsap.to('.papel .sello',{scale:1,rotate:12,duration:.6,ease:'back.out(2.5)',delay:1.7});
+  }});
+  gsap.to('.papel',{rotate:1.5,ease:'none',scrollTrigger:{trigger:'.garantias',start:'top bottom',end:'bottom top',scrub:true}});
+
+
+  /* Imágenes: fondo del hero con parallax y zoom lento */
+  gsap.to('.hero .fondo img',{yPercent:18,scale:1.05,ease:'none',scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:true}});
+  /* Salón: la foto se revela de derecha a izquierda y la imagen se desplaza adentro */
+  var sf=document.querySelector('.salon .foto');
+  if(sf){gsap.to(sf,{clipPath:'inset(0 0 0 0% round 18px)',duration:1.3,ease:'power4.out',scrollTrigger:{trigger:sf,start:'top 78%',once:true}});
+    gsap.to(sf.querySelector('img'),{yPercent:-10,ease:'none',scrollTrigger:{trigger:sf,start:'top bottom',end:'bottom top',scrub:true}});}
+  /* Banda de galería: desfila con el scroll en escritorio */
+  var banda=document.querySelector('.galeria .banda');
+  if(banda){ScrollTrigger.matchMedia({'(min-width: 900px)':function(){
+      var d=banda.scrollWidth-window.innerWidth; if(d<=0)return;
+      gsap.fromTo(banda,{x:0},{x:-d,ease:'none',scrollTrigger:{trigger:'.galeria',start:'top bottom',end:'bottom top',scrub:.8}});
+    }});
+    /* Tilt con el mouse (quickTo) */
+    if(matchMedia('(hover:hover)').matches){banda.querySelectorAll('.foto').forEach(function(f){
+      var rx=gsap.quickTo(f,'rotationX',{duration:.4,ease:'power3'}),ry=gsap.quickTo(f,'rotationY',{duration:.4,ease:'power3'});
+      f.addEventListener('mousemove',function(e){var r=f.getBoundingClientRect();ry(((e.clientX-r.left)/r.width-.5)*10);rx(-((e.clientY-r.top)/r.height-.5)*10);});
+      f.addEventListener('mouseleave',function(){gsap.to(f,{rotationX:0,rotationY:0,duration:.6,ease:'elastic.out(1,.5)'});});
+    });}
+  }
+
+  /* Botones magnéticos con quickTo (no gsap.to en mousemove) */
+  if(matchMedia('(hover:hover)').matches){
+    document.querySelectorAll('.mag').forEach(function(b){
+      var qx=gsap.quickTo(b,'x',{duration:.35,ease:'power3'}),qy=gsap.quickTo(b,'y',{duration:.35,ease:'power3'});
+      b.addEventListener('mousemove',function(e){var r=b.getBoundingClientRect();qx((e.clientX-r.left-r.width/2)*.3);qy((e.clientY-r.top-r.height/2)*.4);});
+      b.addEventListener('mouseleave',function(){gsap.to(b,{x:0,y:0,duration:.6,ease:'elastic.out(1,.4)'});});
+    });
+  }
+})();
+</script>
+</body>
+</html>
