@@ -5,7 +5,7 @@ license: MIT
 metadata:
   author: Valentino Colonna (@valentino.ia)
   source: https://github.com/ValentinoColonna/kit-web
-  version: "1.1"
+  version: "1.3"
 ---
 
 # Rehacer la web de un negocio con IA
@@ -33,17 +33,26 @@ La persona pasa una de tres cosas: **el link** de la web actual, **un archivo `.
 - Contale a la persona, en tres líneas y sin jerga, los **tres hallazgos** que más contactos le cuestan al negocio (en general: no se adapta al celular, sin WhatsApp a un toque, sin datos para Google). Es el teaser: sirve tal cual como mensaje de apertura para el dueño.
 - PageSpeed del antes: `python3 rehacer-web/scripts/medir_pagespeed.py <link> --etiqueta antes` si hay clave de API; si no, dale el enlace de https://pagespeed.web.dev para que lo mida a mano y anote los cuatro números. Con un archivo local, el antes se mide solo si existe el link publicado.
 
-### 2 · Brief (dos o tres mensajes, no un interrogatorio)
-Armá `webs/<negocio>/brief.md` con la plantilla `rehacer-web/references/brief-plantilla.md`. **Proponé vos lo que ya sacaste de la web vieja** y pedí que corrija. El auditor deja en `auditoria.md` la sección «Datos del negocio que dice la web vieja» (teléfonos, WhatsApp, emails, dirección, horarios, redes; si la web tiene página de contacto, también la lee) y el texto completo en `auditoria-texto-web-vieja.txt`: usalos para completar el bloque 1 antes de preguntar.
-- **Bloque 1, lo básico:** qué vende, a quién, dónde, horarios, WhatsApp con código de país, teléfono, email.
-- **Bloque 2, identidad:** colores que ya usa (cartel, Instagram), logo, fotos reales. Si no tiene colores, proponé dos o tres paletas acordes al rubro y que elija. **La paleta es la del negocio.**
-- **Bloque 3, opcional:** tres motivos por los que lo eligen, redes, datos legales.
+### 2 · Brief (con opciones, no un interrogatorio)
+Armá `webs/<negocio>/brief.md` con la plantilla `rehacer-web/references/brief-plantilla.md`. El auditor deja en `auditoria.md` la sección «Datos del negocio que dice la web vieja» (teléfonos, WhatsApp, emails, dirección, horarios, redes; si la web tiene página de contacto, también la lee) y el texto completo en `auditoria-texto-web-vieja.txt`. Con eso **proponé y que la persona elija**: preguntas de opción múltiple (ver «Cómo preguntar» en `CLAUDE.md`), de a una ronda, con lo detectado como opciones. Ejemplo de las tres rondas:
+- **Ronda 1, confirmar lo detectado:** «Saqué esto de la web: [dirección], [horarios], [email]. ¿Está bien?» (Todo bien / Hay algo para corregir). «¿Cuál es el WhatsApp?» (cada celular detectado como opción / Otro). «¿Qué hacen?» (los servicios detectados, selección múltiple).
+- **Ronda 2, identidad:** «¿Qué colores usamos?» (tres paletas acordes al rubro, con nombre y dos colores cada una / Los del cartel o el Instagram). **La paleta es la del negocio.** «¿Qué destacamos arriba de todo?» (las promesas o datos que dice la web, selección múltiple).
+- **Ronda 3, fotos y catálogo:** «¿Fotos?» (Las dejo en `entrada/` / Buscalas en la web del negocio (recomendado si tiene) / Seguimos sin fotos). «¿Mostramos los productos o unidades que tiene la web?» (Sí, sin precio / Sí, con precio / No).
 Lo que no se sabe queda como `[PLACEHOLDER]` visible. Nunca inventes ni omitas en silencio.
 
-### 3 · Fotos
-- Pedí que deje en `entrada/` el logo y las fotos que tenga (local, equipo, productos o platos). Si no tiene, seguí: los marcos muestran un panel y la página igual se ve diseñada.
-- Mirá cada foto en grande antes de usarla: nada de carteles o logos de otro negocio, patentes, caras de clientes sin permiso ni escenas que no son del rubro.
-- Copialas a `webs/<negocio>/assets/` con los nombres fijos de `rehacer-web/references/imagenes.md` (`hero-salon.jpg`, `salon.jpg`, `galeria-01.jpg`…, `catalogo-01.jpg`…). En Mac, achicalas al copiarlas: `sips -Z 1600 -s formatOptions 80 entrada/foto.jpg --out webs/<negocio>/assets/salon.jpg`.
+### 3 · Fotos (en este orden)
+1. **Las del dueño:** lo que deje en `entrada/` (logo, local, equipo, productos).
+2. **Las de su propia web**, si tiene: `python3 rehacer-web/scripts/buscar_fotos.py <link> --salida webs/<negocio>/fotos-candidatas`. Recorre la web del negocio (galería, productos, fichas) y deja las fotos numeradas con el nombre de la página de la que salen, `candidatas.json` y una hoja de contactos (`index.html`). Tarda menos de un minuto.
+3. **Google Maps e Instagram no se bajan solos:** Google no permite descargar y volver a publicar las fotos de Maps (y muchas las suben los clientes, no el negocio), e Instagram bloquea las descargas automáticas. Si hacen falta, pedile al dueño 5 a 10 fotos suyas: las de su Instagram, las que subió como propietario en Google Maps (pestaña «Del propietario») o las del celular, por WhatsApp o en `entrada/`.
+4. **Sin fotos:** los marcos muestran un panel y la página igual se ve diseñada.
+
+**Elegir es mirar cada foto en grande**, no leer el nombre del archivo. Sirven: el frente o el interior del local, el equipo trabajando, los productos o unidades reales. No sirven: carteles o logos de otro negocio o marca, publicidad de la plataforma donde está la web vieja, patentes legibles, caras de clientes sin permiso, fotos borrosas o con texto encima. **Mirá también lo que se lee dentro de la foto:** un teléfono, una dirección o un número de calle distinto de los del brief descarta la foto (o se pregunta), porque contradice los datos de la página. Si hace falta, ampliá la zona para leerla. Asigná:
+- **Catálogo:** la mejor foto de cada producto o unidad, por el nombre de su página (`titulo_pagina` en `candidatas.json`). De frente o tres cuartos, sin interiores ni motores. Si un producto solo tiene fotos chicas (en `fotos-candidatas/chicas/`), usala en su tarjeta solo si se ve nítida al tamaño de la tarjeta; si no, va el panel.
+- **Foto grande del local (`salon.jpg`):** la que mejor muestre el lugar, por ejemplo el frente con el cartel.
+- **Fondo del hero (`hero-salon.jpg`):** solo si hay una foto de 1200 px de ancho o más. Una foto chica estirada se ve borrosa: en ese caso, el hero va sin foto.
+- **Galería:** tres a cinco variadas, sin repetir las del catálogo.
+- **Logo:** si aparece, usalo en la barra de arriba en lugar del nombre en texto, solo si se lee bien sobre el fondo.
+Copialas a `webs/<negocio>/assets/` con los nombres fijos de `rehacer-web/references/imagenes.md`. **No agrandes ninguna foto.** En Mac, mirá el tamaño con `sips -g pixelWidth -g pixelHeight foto.jpg`. Si el lado mayor pasa de 1600 px, achicala al copiarla: `sips -Z 1600 -s formatOptions 80 origen.jpg --out webs/<negocio>/assets/salon.jpg`. Si es más chica, solo recomprimila: `sips -s format jpeg -s formatOptions 80 origen.jpg --out webs/<negocio>/assets/salon.jpg`. Contale a la persona qué foto usaste para cada lugar y cuáles descartaste, con el motivo.
 
 ### 4 · Generar la página
 Antes de generar, decidí tono, «sección estrella» y CTA según el rubro:
@@ -77,6 +86,7 @@ Antes de generar, decidí tono, «sección estrella» y CTA según el rubro:
 
 ## Qué entrega esta skill
 - `webs/<negocio>/auditoria.md` y `auditoria.html`, y el teaser de tres hallazgos.
+- `webs/<negocio>/fotos-candidatas/` con la hoja de contactos, si la web tenía fotos.
 - `webs/<negocio>/brief.md`.
 - `webs/<negocio>/index.html` con `assets/`, validado y revisado en `gate/`.
 - `webs/<negocio>-publicar/`, lista para Netlify Drop.
@@ -84,7 +94,7 @@ Antes de generar, decidí tono, «sección estrella» y CTA según el rubro:
 
 ## Qué no hacer
 - No inventar datos del negocio: ni reseñas, ni años, ni clientes, ni premios, ni «somos líderes».
-- No usar fotos ajenas. Fotos del dueño; si no hay, ninguna, o de un banco libre (Pexels, Unsplash) solo si la persona lo pide, marcadas como ilustrativas.
+- No usar fotos ajenas. Fotos del dueño o de su propia web; si no hay, ninguna, o de un banco libre (Pexels, Unsplash) solo si la persona lo pide, marcadas como ilustrativas. No bajar fotos de Google Maps, Instagram ni buscadores.
 - No usar la paleta de quien usa el kit en la web del negocio.
 - No prometer resultados de ventas ni de Google.
 - No publicar ni subir datos del negocio a otros servicios.

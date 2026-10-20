@@ -18,6 +18,7 @@ Funciona con Sonnet. Necesitás Python 3 (en Mac ya viene) y Google Chrome para 
 | La skill `rehacer-web` | `rehacer-web/SKILL.md` | Los siete pasos: auditar, brief, fotos, generar, validar, publicar, medir |
 | Carpetas de trabajo | `entrada/` y `webs/` | Lo que traés (HTML, logo, fotos) y cada web nueva, en su carpeta |
 | Auditor de la web vieja | `rehacer-web/scripts/auditar_web.py` | Te dice qué tiene y qué le falta a la web actual (celular, WhatsApp, Google, peso). Con `--html` genera un informe visual para mostrarle al dueño y el «teaser»: los 3 hallazgos para abrir la conversación |
+| Buscador de fotos | `rehacer-web/scripts/buscar_fotos.py` | Baja las fotos que el negocio ya publicó en su propia web (galería, productos, fichas) y arma una hoja de contactos para elegir. No toca Google Maps ni Instagram |
 | Validador de la web nueva | `rehacer-web/scripts/validar_sitio.py` | Chequea el `index.html` antes de publicarlo |
 | Medidor de PageSpeed | `rehacer-web/scripts/medir_pagespeed.py` | El antes y el después, con clave gratuita de Google o a mano |
 | Brief | `rehacer-web/references/brief-plantilla.md` | Las diez preguntas para el dueño |

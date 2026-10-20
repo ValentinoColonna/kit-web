@@ -2,6 +2,7 @@
   "permissions": {
     "allow": [
       "Bash(python3 rehacer-web/scripts/auditar_web.py:*)",
+      "Bash(python3 rehacer-web/scripts/buscar_fotos.py:*)",
       "Bash(python3 rehacer-web/scripts/validar_sitio.py:*)",
       "Bash(python3 rehacer-web/scripts/medir_pagespeed.py:*)",
       "Bash(mkdir:*)",

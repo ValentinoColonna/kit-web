@@ -13,6 +13,9 @@ Saludá así, en no más de cinco líneas, y esperá la respuesta:
 
 Si en `webs/` ya hay trabajos empezados, agregá una línea: «También podemos seguir con <nombre>», con el último.
 
+## Cómo preguntar
+Todo lo que se pueda elegir o confirmar va como **pregunta de opción múltiple** (la herramienta de preguntas con opciones de Claude Code): hasta cuatro preguntas por vez, de dos a cuatro opciones cortas cada una, la recomendada primero y marcada «(recomendado)». Lo que detectaste va como opción para confirmar, no como pregunta abierta: es más fácil decir «sí, es ese» que escribirlo. La persona siempre puede escribir otra cosa. Si la herramienta no está disponible, numerá las opciones para que conteste con un número.
+
 ## Lo que dice la persona → lo que hacés
 
 | Dice | Acción |
@@ -20,7 +23,7 @@ Si en `webs/` ya hay trabajos empezados, agregá una línea: «También podemos 
 | Un link, «la web es…» | Paso 1 de la skill con ese link |
 | «te dejé el html», «está en entrada» | Paso 1 con el archivo `.html` de `entrada/` |
 | «no tiene web» | Saltá el paso 1; empezá el brief desde cero (paso 2) |
-| «te dejé las fotos», «no tengo fotos» | Paso 3 · fotos |
+| «te dejé las fotos», «no tengo fotos», «buscalas vos» | Paso 3 · fotos: las del dueño, las de su propia web con el buscador, o sin fotos |
 | «cambiá el color / el texto / el orden», «sacá…» | Editá `webs/<negocio>/index.html`, volvé a validar y a mirar (paso 5) |
 | «publicala», «¿cómo la subo?» | Paso 6 · publicar |
 | «medila», «¿cómo quedó?» | Paso 7 · medir el después |
@@ -33,7 +36,7 @@ El procedimiento completo, paso a paso, está en `rehacer-web/SKILL.md`. Leelo a
 
 - **No inventes nada del negocio:** ni reseñas, ni años, ni clientes, ni premios, ni precios. Lo que no se sabe queda como `[PLACEHOLDER]` visible y se lo decís a la persona.
 - **La paleta es la del negocio**, nunca la tuya ni la de quien usa el kit.
-- **Fotos:** las del dueño. Si no hay, el marco muestra un panel y la página igual se ve diseñada. Fotos de bancos libres (Pexels, Unsplash) solo si la persona lo pide, marcadas como ilustrativas y miradas una por una en grande.
+- **Fotos:** las del dueño o las de su propia web (el buscador las baja), elegidas mirándolas una por una. Google Maps e Instagram no se bajan solos: se le piden al dueño. Si no hay, el marco muestra un panel y la página igual se ve diseñada. Fotos de bancos libres (Pexels, Unsplash) solo si la persona lo pide, marcadas como ilustrativas.
 - **No publiques nada vos:** publicar es arrastrar la carpeta a Netlify Drop, y lo hace la persona. Vos dejás la carpeta lista y le decís qué arrastrar.
 - **No subas datos del negocio a otros servicios** que no sean los del procedimiento (Google PageSpeed para medir, Netlify para publicar).
 - **No agregues librerías** fuera de GSAP y ScrollTrigger por CDN y Google Fonts.
@@ -42,5 +45,5 @@ El procedimiento completo, paso a paso, está en `rehacer-web/SKILL.md`. Leelo a
 ## Mapa
 
 - `entrada/` lo que trae la persona: el HTML de la web vieja (si no hay link), el logo y las fotos.
-- `webs/<negocio>/` cada trabajo: `auditoria.md` y `auditoria.html` (el antes), `brief.md`, `index.html` (la web nueva), `assets/` (fotos con nombres fijos), `gate/` (capturas de revisión). Esa carpeta es la que se publica, sin `gate/` ni los `.md`.
-- `rehacer-web/` la skill: `SKILL.md` (procedimiento), `scripts/` (auditor, validador, medidor), `plantilla/` (esqueleto con el scroll ya hecho), `references/` (prompt, brief, fotos, gate visual, publicar).
+- `webs/<negocio>/` cada trabajo: `auditoria.md` y `auditoria.html` (el antes), `fotos-candidatas/` (las fotos de su web, para elegir), `brief.md`, `index.html` (la web nueva), `assets/` (fotos con nombres fijos), `gate/` (capturas de revisión). Esa carpeta es la que se publica, sin `gate/` ni los `.md`.
+- `rehacer-web/` la skill: `SKILL.md` (procedimiento), `scripts/` (auditor, buscador de fotos, validador, medidor), `plantilla/` (esqueleto con el scroll ya hecho), `references/` (prompt, brief, fotos, gate visual, publicar).

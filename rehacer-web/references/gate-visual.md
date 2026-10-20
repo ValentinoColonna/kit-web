@@ -18,7 +18,8 @@ printf '<!doctype html><meta charset=utf-8><style>html,body{margin:0}iframe{bord
 "$CH" --headless=new --disable-gpu --hide-scrollbars --no-sandbox --user-data-dir=/tmp/g2 \
   --window-size=375,812 --force-device-scale-factor=2 --virtual-time-budget=8000 --screenshot=gate/movil-js.png "file://$PWD/_movil.html"
 
-# 3 · Sin JS (estructura y SEO): una copia sin <script> (menos el JSON-LD) y sin el hero a pantalla completa, alta
+# 3 · Sin JS (estructura y SEO): una copia sin <script> (menos el JSON-LD) y sin el hero a pantalla completa, alta.
+#     Altos de 7000 y 9000 px: si la página es más larga (un catálogo grande), subilos hasta que se vea el pie.
 python3 - <<'EOF'
 import re;t=open('index.html',encoding='utf-8').read()
 t=re.sub(r'<script(?! type="application/ld\+json")[^>]*>.*?</script>','',t,flags=re.S)
@@ -26,10 +27,10 @@ t=t.replace('</style>','.hero{min-height:auto!important}.hz{height:auto!importan
 open('_sinjs.html','w',encoding='utf-8').write(t)   # al lado de index.html, para que carguen las fotos
 EOF
 "$CH" --headless=new --disable-gpu --hide-scrollbars --no-sandbox --user-data-dir=/tmp/g3 \
-  --window-size=1280,3000 --screenshot=gate/secciones-sinjs.png "file://$PWD/_sinjs.html"
-printf '<!doctype html><meta charset=utf-8><style>html,body{margin:0}iframe{border:0;width:375px;height:3600px;display:block}</style><iframe src="_sinjs.html"></iframe>' > _movil-sinjs.html
+  --window-size=1280,7000 --screenshot=gate/secciones-sinjs.png "file://$PWD/_sinjs.html"
+printf '<!doctype html><meta charset=utf-8><style>html,body{margin:0}iframe{border:0;width:375px;height:9000px;display:block}</style><iframe src="_sinjs.html"></iframe>' > _movil-sinjs.html
 "$CH" --headless=new --disable-gpu --hide-scrollbars --no-sandbox --user-data-dir=/tmp/g4 \
-  --window-size=375,3600 --screenshot=gate/secciones-movil-sinjs.png "file://$PWD/_movil-sinjs.html"
+  --window-size=375,9000 --screenshot=gate/secciones-movil-sinjs.png "file://$PWD/_movil-sinjs.html"
 rm _sinjs.html _movil.html _movil-sinjs.html
 ```
 
