@@ -1,6 +1,6 @@
 # kit-web · Rehacé la web de un negocio con IA
 
-Lo que te llevás del video de Valentino IA, sin pedir nada a cambio. Abrís la carpeta con Claude Code, escribís «hola» y te pide el link de la web vieja del negocio. Con eso audita la web, arma la página nueva con scroll animado, la valida, la revisa en celular y te la deja lista para publicar gratis.
+Lo que te llevás del video de Valentino IA, sin pedir nada a cambio. Abrís la carpeta con Claude Code, escribís «hola» y te pide el link de la web vieja del negocio. Con eso audita la web, arma la página nueva con scroll animado en uno de cinco estilos, la valida, la revisa en celular y te la deja lista para publicar gratis.
 
 ## Cómo se usa
 
@@ -23,7 +23,7 @@ Funciona con Sonnet. Necesitás Python 3 (en Mac ya viene) y Google Chrome para 
 | Medidor de PageSpeed | `rehacer-web/scripts/medir_pagespeed.py` | El antes y el después, con clave gratuita de Google o a mano |
 | Brief | `rehacer-web/references/brief-plantilla.md` | Las diez preguntas para el dueño |
 | Prompt de espectáculo (el principal) | `rehacer-web/references/prompt-web-nueva-espectaculo.md` | Scrolling deslumbrante con GSAP: hero con máscara, sección pineada, contadores, fotos integradas con parallax y banda con tilt, magnéticos |
-| Esqueleto con la mecánica hecha | `rehacer-web/plantilla/esqueleto-espectaculo.html` + `COMO-USAR-EL-ESQUELETO.md` | Para que cualquier modelo (Sonnet, ChatGPT, Codex) rinda igual: solo completa los slots {{...}} (unos 80, con catálogo, servicios e imágenes) y adapta al rubro |
+| Cinco esqueletos con la mecánica hecha | `rehacer-web/plantilla/` + `COMO-USAR-EL-ESQUELETO.md` | Para que cualquier modelo (Sonnet, ChatGPT, Codex) rinda igual y las webs no salgan iguales: **Noche** (autos y oficios), **Mantel** (gastronomía), **Aire** (salud y profesionales), **Pulso** (gimnasio, barbería, estética) y **Vidriera** (tiendas). Cada uno con su hero, su orden, su tipografía y sus animaciones; el modelo completa los slots {{...}} y adapta al rubro. Claude te propone el del rubro y te deja elegir |
 | Gate visual | `rehacer-web/references/gate-visual.md` | Cuatro renders con Chrome headless (escritorio y celular, con y sin JS) y checklist de cierre |
 | Prompt sobrio | `rehacer-web/references/prompt-web-nueva.md` | Versión mínima sin librerías, por si el negocio la pide |
 | Cómo publicar | `rehacer-web/references/publicar-netlify.md` | Netlify Drop, gratis, y dominio propio |

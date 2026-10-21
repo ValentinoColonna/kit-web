@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<!--
+ESQUELETO «VIDRIERA» · rehacer-web · alegre y de producto, para comercios (tienda, vivero, florería, ferretería, librería, bazar,
+dietética, ropa, mueblería)
+Mecánica YA HECHA y probada con el gate visual: GSAP + ScrollTrigger. Hero en mosaico que se arma solo, con stickers y un cartel colgante
+que dice ABIERTO o CERRADO según el horario real; catálogo con filtros por categoría y «sumar a la consulta» que arma un solo WhatsApp
+con todos los productos elegidos (momento firma); vidriera giratoria en 3D (sección fija); toldo que se despliega sobre la foto del
+local; motivos en stickers que giran con el scroll; contadores reales; horario de hoy resaltado; botones magnéticos; barra de progreso;
+nav sin blur; degradación sin JS; reduced-motion.
+Imágenes swap-ready (assets/hero-salon.jpg, salon.jpg, galeria-01..05.jpg, catalogo-01..NN.jpg); si faltan, el marco muestra un panel.
+Tu trabajo: completar los slots {{...}} con el brief, repetir el producto por cada ítem REAL (y el filtro por cada categoría real),
+adaptar nombres de sección al rubro y sacar lo que no aplique.
+Reglas: no inventes datos; lo que falte queda como [PLACEHOLDER] visible (validá con --borrador); no agregues librerías;
+no backdrop-filter en la nav; no gsap.to dentro de mousemove; estados iniciales ocultos solo en gsap.set.
+Al terminar: python3 rehacer-web/scripts/validar_sitio.py index.html y el gate de references/gate-visual.md.
+-->
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITULO_SEO: nombre + qué vende + ciudad, 10 a 70 caracteres}}</title>
+<meta name="description" content="{{DESCRIPCION_SEO: una frase de 50 a 170 caracteres con qué vende, para quién y dónde}}">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- FUENTES: par por defecto de «Vidriera». Otros pares probados en COMO-USAR-EL-ESQUELETO.md; si lo cambiás, cambiá también --f-display y --f-texto -->
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"{{TIPO_SCHEMA: Store o el subtipo: GardenStore, Florist, HardwareStore, BookStore, ClothingStore…}}","name":"{{NOMBRE}}","url":"{{URL}}","telephone":"{{TELEFONO_INTERNACIONAL}}","email":"{{EMAIL}}","address":{"@type":"PostalAddress","streetAddress":"{{CALLE_Y_NUMERO}}","addressLocality":"{{LOCALIDAD}}","addressRegion":"{{PROVINCIA}}","postalCode":"{{CP}}","addressCountry":"AR"},"openingHours":["{{HORARIO_SCHEMA_1}}","{{HORARIO_SCHEMA_2}}"]}
+</script>
+<style>
+/* ===== Sistema cerrado: fondo claro teñido, tinta oscura con bordes gruesos y sombras duras, UN acento del negocio, secundario de apoyo ===== */
+:root{--bg:{{FONDO: claro y teñido con el color del negocio, hex (p. ej. #e9eee2)}};--bg-rgb:{{FONDO_RGB: el mismo color en r,g,b}};--bg2:{{FONDO2: el fondo un punto más oscuro}};--papel:#fffaf2;--ink:#1d2a20;--ink-rgb:29,42,32;--ink2:#4a5a4d;--muted:#768577;--acc:{{ACENTO: el color fuerte del negocio, hex}};--acc-rgb:{{ACENTO_RGB: r,g,b}};--acc-claro:{{ACENTO_CLARO: el acento más claro}};--sobre-acc:{{TEXTO_SOBRE_ACENTO: casi blanco}};--acc2:{{SECUNDARIO: el segundo color del negocio, hex}};--acc2-rgb:{{SECUNDARIO_RGB: r,g,b}};--wa:#25d366;--r:26px;--r2:16px;--borde:2px solid var(--ink);--sombra:5px 5px 0 var(--ink);--f-display:"Bricolage Grotesque",system-ui,sans-serif;--f-texto:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-texto);font-size:17px;line-height:1.55;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+::selection{background:var(--acc);color:var(--sobre-acc)}
+h1,h2,h3{font-family:var(--f-display);font-weight:800;letter-spacing:-.035em;line-height:.98;text-wrap:balance;margin:0;font-variation-settings:"opsz" 96}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+.skip{position:absolute;left:-999px;top:8px;background:var(--acc);color:var(--sobre-acc);padding:8px 12px;border-radius:8px;z-index:99}.skip:focus{left:8px}
+:focus-visible{outline:3px solid var(--acc);outline-offset:3px}
+section{scroll-margin-top:110px}
+.progreso{position:fixed;left:0;top:0;height:4px;width:100%;transform:scaleX(0);transform-origin:0 50%;background:var(--acc);z-index:50}
+
+/* ===== Aviso + nav (sólidos, sin blur) ===== */
+.arriba{position:fixed;top:0;left:0;right:0;z-index:40;background:var(--bg);transition:box-shadow .3s}
+.arriba.compacta{box-shadow:0 2px 0 var(--ink)}
+.aviso{background:var(--ink);color:var(--papel);font-size:.84rem;font-weight:600;white-space:nowrap;overflow:hidden;padding:7px 0}
+.aviso .track{display:inline-block;will-change:transform}.aviso span{display:inline-block;padding:0 26px}.aviso span::after{content:"✿";margin-left:52px;color:var(--acc-claro)}
+nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 20px}
+nav .marca{font-family:var(--f-display);font-weight:800;font-size:1.35rem;letter-spacing:-.03em;line-height:1;text-decoration:none}
+nav .marca small{display:block;font-family:var(--f-texto);font-weight:600;font-size:.74rem;letter-spacing:.02em;color:var(--ink2);margin-top:3px}
+nav .links{display:none;gap:24px;font-weight:600;font-size:.95rem}nav .links a{text-decoration:none}nav .links a:hover{color:var(--acc)}
+@media(min-width:960px){nav .links{display:flex}}
+nav .acciones{display:flex;gap:8px;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:11px 20px;border:var(--borde);border-radius:999px;box-shadow:var(--sombra);font-weight:700;font-size:1rem;text-decoration:none;transition:box-shadow .2s;will-change:transform}
+.btn:hover{box-shadow:7px 7px 0 var(--ink)}.btn:active{box-shadow:1px 1px 0 var(--ink)}
+.btn-acc{background:var(--acc);color:var(--sobre-acc)}
+.btn-wa{background:var(--wa);color:#07210f}
+.btn-borde{background:var(--papel)}
+.cuenta-nav{display:none}.js .cuenta-nav{display:inline-flex}
+.cuenta{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 6px;border-radius:999px;background:var(--acc);color:var(--sobre-acc);font-size:.8rem;font-weight:800}
+@media(max-width:520px){nav .llamar span{display:none}.cuenta-nav .txt{display:none}}
+
+/* ===== Fotos y paneles ===== */
+.foto{position:relative;overflow:hidden;border:var(--borde);border-radius:var(--r);isolation:isolate;background-color:var(--bg2);background-image:radial-gradient(rgba(var(--ink-rgb),.14) 1.6px,transparent 2px);background-size:16px 16px}
+.foto img{display:block;width:100%;height:100%;object-fit:cover;will-change:transform}
+.foto.sin img{display:none}
+.foto.sin::before{content:attr(data-nombre);position:absolute;inset:0;display:grid;place-items:center;padding:18px;text-align:center;font-family:var(--f-display);font-weight:700;font-size:.95rem;line-height:1.2;color:rgba(var(--ink-rgb),.55)}
+.tag{position:absolute;left:12px;top:12px;z-index:2;padding:5px 11px;border:var(--borde);border-radius:999px;background:var(--papel);font-weight:700;font-size:.78rem}
+.tag:empty{display:none}
+.sticker{position:absolute;z-index:3;display:grid;place-items:center;text-align:center;border:var(--borde);border-radius:50%;font-family:var(--f-display);font-weight:800;line-height:1.05;box-shadow:3px 3px 0 var(--ink)}
+
+/* ===== Hero en mosaico ===== */
+.hero{padding:142px 20px 60px}
+.bento{max-width:1240px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.t{position:relative;border:var(--borde);border-radius:var(--r);box-shadow:var(--sombra)}
+.t-titulo{grid-column:1/3;padding:30px 24px;background:var(--papel)}
+.t-foto{grid-column:1/3;aspect-ratio:4/3}
+.t-foto .foto,.t-prod .foto{height:100%;border:0;border-radius:calc(var(--r) - 2px)}
+.t-prod{aspect-ratio:1}
+.t-cartel{display:grid;place-items:center;padding:22px 10px 16px;background:var(--acc2);color:var(--sobre-acc);overflow:hidden}
+@media(min-width:900px){.t-foto .sticker{right:-14px;width:108px;height:108px}.bento{grid-template-columns:repeat(12,1fr);grid-template-rows:repeat(2,minmax(210px,33vh));gap:18px}
+.t-titulo{grid-column:1/8;grid-row:1/3;padding:48px 44px;display:flex;flex-direction:column;justify-content:center}
+.t-foto{grid-column:8/13;grid-row:1;aspect-ratio:auto}.t-prod{grid-column:8/11;grid-row:2;aspect-ratio:auto}.t-cartel{grid-column:11/13;grid-row:2}}
+.pill{display:inline-flex;align-self:flex-start;align-items:center;gap:8px;margin:0 0 18px;padding:6px 12px;border:var(--borde);border-radius:999px;background:var(--bg);font-weight:700;font-size:.85rem}
+.hero h1{font-size:clamp(2.5rem,6.4vw,5.6rem)}
+.hero h1 em{font-style:normal;color:var(--acc)}
+.hero .sub{margin:20px 0 26px;color:var(--ink2);font-size:1.12rem;max-width:44ch}
+.hero .ctas{display:flex;flex-wrap:wrap;gap:12px}
+.t-foto .sticker{right:-4px;top:-16px;width:100px;height:100px;padding:12px;background:var(--acc);color:var(--sobre-acc);font-size:.95rem;transform:rotate(10deg)}
+.t-prod .etiqueta{position:absolute;left:12px;right:12px;bottom:12px;z-index:2;display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px 10px;padding:9px 12px;border:var(--borde);border-radius:14px;background:var(--papel);font-weight:700;font-size:.9rem}
+/* Cartel colgante: ABIERTO o CERRADO según el horario real */
+.cartel{display:grid;justify-items:center;transform-origin:50% 0}
+.cartel .hilos{width:96px;height:26px;border:2px solid var(--sobre-acc);border-bottom:0;border-radius:48px 48px 0 0;margin-bottom:-2px}
+.cartel .tabla{padding:10px 16px;border:var(--borde);border-radius:12px;background:var(--papel);color:var(--ink);text-align:center;box-shadow:3px 3px 0 var(--ink)}
+.cartel .tabla b{display:block;font-family:var(--f-texto);font-weight:800;font-size:1.25rem;letter-spacing:.06em;text-transform:uppercase}
+.cartel.cerrado .tabla b{color:var(--acc)}
+.cartel .tabla small{display:block;font-weight:600;font-size:.8rem;color:var(--ink2);max-width:15ch}
+
+/* ===== Secciones ===== */
+.sec{padding:100px 20px;position:relative}
+.wrap{max-width:1240px;margin:0 auto}
+.kicker{display:inline-block;margin-bottom:14px;padding:4px 12px;border:var(--borde);border-radius:999px;background:var(--papel);font-weight:700;font-size:.82rem;letter-spacing:.04em}
+h2{font-size:clamp(2.1rem,5vw,4.2rem);max-width:17ch}
+h2 em{font-style:normal;color:var(--acc)}
+.lead{color:var(--ink2);font-size:1.1rem;max-width:52ch;margin:16px 0 0}
+
+/* Catálogo con filtros y «sumar a la consulta» */
+.filtros{display:flex;flex-wrap:wrap;gap:10px;margin:30px 0 8px}
+html:not(.js) .filtros{display:none}
+.chip{min-height:44px;padding:8px 18px;border:var(--borde);border-radius:999px;background:var(--papel);font-weight:700;font-size:.95rem;transition:background .2s,color .2s}
+.chip.activo{background:var(--ink);color:var(--papel)}
+.grilla{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr));gap:18px;margin-top:24px}
+.prod{display:flex;flex-direction:column;border:var(--borde);border-radius:var(--r);background:var(--papel);box-shadow:var(--sombra);overflow:hidden;transition:box-shadow .25s}
+.prod:hover{box-shadow:8px 8px 0 var(--ink)}
+.prod .foto{border:0;border-bottom:var(--borde);border-radius:0;aspect-ratio:1}
+.prod .foto img{transition:transform .8s cubic-bezier(.2,.8,.2,1)}.prod:hover .foto img{transform:scale(1.07) rotate(-1deg)}
+.prod .texto{display:flex;flex-direction:column;gap:6px;flex:1;padding:16px 16px 16px}
+.prod h3{font-size:1.25rem;letter-spacing:-.02em;line-height:1.1}
+.prod p{margin:0;color:var(--ink2);font-size:.95rem}
+.prod .pie2{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:12px}
+.prod .precio{font-family:var(--f-display);font-weight:800;font-size:1.15rem}
+.prod .acc{display:flex;gap:8px}
+.prod .btn{min-height:44px;padding:8px 14px;font-size:.9rem;box-shadow:3px 3px 0 var(--ink)}
+.sumar{display:none;width:44px;height:44px;border:var(--borde);border-radius:50%;background:var(--acc);color:var(--sobre-acc);font-weight:800;font-size:1.3rem;line-height:1;box-shadow:3px 3px 0 var(--ink)}
+.js .sumar{display:inline-grid;place-items:center}
+.sumar.en{background:var(--ink);color:var(--papel)}
+@media(max-width:599px){.grilla{grid-template-columns:1fr 1fr;gap:12px}.prod .texto{padding:12px}.prod h3{font-size:1.04rem}.prod p{font-size:.86rem}.prod .pie2{flex-wrap:wrap}.prod .precio,.prod .acc{width:100%}.prod .acc .btn{flex:1;padding:8px 6px}}
+.productos .nota{color:var(--muted);font-size:.9rem;margin-top:22px}
+.consulta-barra{position:fixed;left:12px;right:12px;bottom:12px;z-index:46;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;max-width:620px;margin:0 auto;padding:10px 10px 10px 18px;border:var(--borde);border-radius:999px;background:var(--papel);box-shadow:var(--sombra);font-weight:700}
+.consulta-barra[hidden]{display:none}
+.consulta-barra .vaciar{min-height:44px;padding:0 10px;border:0;background:none;text-decoration:underline;font-weight:600;color:var(--ink2)}
+.consulta-barra .btn{min-height:44px;box-shadow:none}
+.punto-vuela{position:fixed;left:0;top:0;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:var(--acc);border:2px solid var(--ink);z-index:80;pointer-events:none}
+
+/* Vidriera giratoria en 3D (sin JS es un carril que se desliza) */
+.vidriera{overflow:hidden;padding-top:70px;padding-bottom:70px;background:var(--bg2);border-top:var(--borde);border-bottom:var(--borde)}
+.anillo{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;padding:34px 4px 10px;scrollbar-width:none}
+.anillo::-webkit-scrollbar{display:none}
+.anillo .foto{flex:0 0 min(70vw,300px);aspect-ratio:3/4;margin:0;scroll-snap-align:center;box-shadow:var(--sombra)}
+.pie{position:absolute;left:12px;bottom:12px;z-index:2;padding:5px 11px;border:var(--borde);border-radius:999px;background:var(--papel);font-weight:700;font-size:.82rem}
+.anillo .giro{display:contents}
+.anillo.en3d{display:block;overflow:visible;position:relative;height:min(54vh,500px);padding:0;perspective:1300px}
+.anillo.en3d .giro{display:block;position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d}
+.anillo.en3d .foto{position:absolute;width:var(--w);aspect-ratio:3/4;margin:calc(var(--w) * -.667) 0 0 calc(var(--w) * -.5);backface-visibility:hidden;-webkit-backface-visibility:hidden}
+
+/* El local: el toldo se despliega sobre la foto */
+.local .grid2{display:grid;gap:44px;align-items:center}
+@media(min-width:900px){.local .grid2{grid-template-columns:1.1fr .9fr;gap:64px}}
+.frente{position:relative;padding-top:6px}
+.toldo{position:relative;z-index:2;height:64px;margin:0 -10px;border:var(--borde);border-radius:18px 18px 4px 4px;background:repeating-linear-gradient(90deg,var(--acc) 0 36px,var(--papel) 36px 72px);transform-origin:50% 0}
+.toldo::after{content:"";position:absolute;left:-2px;right:-2px;top:100%;height:18px;background:radial-gradient(circle at 18px 0,var(--acc) 16px,transparent 17px) 0 0/72px 18px repeat-x,radial-gradient(circle at 54px 0,var(--papel) 16px,transparent 17px) 0 0/72px 18px repeat-x}
+.frente .foto{aspect-ratio:4/3;border-top-left-radius:0;border-top-right-radius:0;margin-top:-2px;box-shadow:var(--sombra)}
+
+/* Motivos en stickers que giran con el scroll */
+.stickers{list-style:none;padding:0;margin:44px 0 0;display:flex;flex-wrap:wrap;justify-content:center;gap:18px}
+.stickers li{width:min(100%,220px);aspect-ratio:1;display:grid;place-items:center;padding:26px;border:var(--borde);border-radius:50%;box-shadow:var(--sombra);text-align:center;font-family:var(--f-display);font-weight:800;font-size:1.3rem;line-height:1.08;letter-spacing:-.02em;background:var(--acc);color:var(--sobre-acc)}
+.stickers li:nth-child(2){background:var(--acc2)}.stickers li:nth-child(3){background:var(--papel);color:var(--ink)}
+@media(max-width:600px){.stickers li{width:min(100%,180px);font-size:1.12rem}}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:56px;max-width:900px;margin-left:auto;margin-right:auto;text-align:center}
+.num b{display:block;font-family:var(--f-display);font-weight:800;font-size:clamp(2.4rem,6vw,4.4rem);letter-spacing:-.04em;line-height:1;color:var(--acc2)}
+.num small{display:block;margin-top:6px;color:var(--ink2);font-weight:600;font-size:.92rem}
+.motivos .cabeza{text-align:center}.motivos h2{margin:0 auto}
+
+/* Dónde */
+.donde .grid2{display:grid;gap:40px;align-items:start}
+@media(min-width:900px){.donde .grid2{grid-template-columns:1fr 1fr;align-items:center}}
+.horas{display:grid;gap:8px;margin-top:24px;max-width:480px}
+.horas div{display:flex;justify-content:space-between;gap:12px;padding:12px 16px;border:var(--borde);border-radius:14px;background:var(--papel)}
+.horas b{text-align:right}
+.horas .hoy{background:var(--acc);color:var(--sobre-acc);box-shadow:3px 3px 0 var(--ink)}
+.horas .hoy span::after{content:" · hoy";font-weight:700}
+.mapa{position:relative;aspect-ratio:1;max-width:520px;width:100%;margin:0 auto;border:var(--borde);border-radius:var(--r);background:var(--papel);box-shadow:var(--sombra);overflow:hidden}
+.mapa svg{position:absolute;inset:0;width:100%;height:100%}
+.mapa .pin{position:absolute;left:55%;top:46%;transform:translate(-50%,-100%);display:grid;justify-items:center}
+.mapa .pin b{padding:6px 12px;border:var(--borde);border-radius:12px;background:var(--acc);color:var(--sobre-acc);font-family:var(--f-display);font-weight:800;white-space:nowrap;box-shadow:3px 3px 0 var(--ink)}
+.mapa .pin i{width:4px;height:22px;background:var(--ink)}
+
+/* Contacto */
+.contacto .caja{padding:48px 26px;border:var(--borde);border-radius:36px;background:var(--acc2);color:var(--sobre-acc);box-shadow:8px 8px 0 var(--ink);text-align:center}
+.contacto h2{margin:0 auto}.contacto .kicker{color:var(--ink)}
+.contacto .ctas{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:30px}
+.contacto .btn-borde{color:var(--ink)}
+.contacto .mail{margin:22px 0 0;font-weight:600}
+footer{padding:28px 20px 100px;text-align:center;color:var(--muted);font-size:.85rem}
+.wa-fijo{position:fixed;right:16px;bottom:16px;z-index:45}
+
+/* Los estados iniciales ocultos los fija GSAP (gsap.set), nunca el CSS. Sin JS, o si el CDN falla, la web se ve completa. */
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add('js');</script>
+<a class="skip" href="#productos">Saltar al contenido</a>
+<div class="progreso" aria-hidden="true"></div>
+
+<div class="arriba" id="arriba">
+  <div class="aviso" aria-hidden="true"><div class="track">{{AVISOS: 3 o 4 <span> con datos reales cortos, p. ej. <span>Abierto de lunes a sábado</span><span>Envíos en Adrogué</span>}}</div></div>
+  <nav>
+    <a class="marca" href="#inicio">{{NOMBRE}}<small>{{RUBRO_CORTO: Vivero, Ferretería…}} · {{LOCALIDAD_CORTA}}</small></a>
+    <div class="links"><a href="#productos">{{NAV_CATALOGO: Productos}}</a><a href="#local">{{NAV_FOTO_GRANDE: El local}}</a><a href="#donde">Dónde</a></div>
+    <div class="acciones"><a class="btn btn-borde cuenta-nav" href="#productos" aria-label="Tu consulta"><span class="txt">Consulta</span> <b class="cuenta">0</b></a><a class="btn btn-acc mag llamar" href="tel:{{TELEFONO_TEL}}">☎ <span>Llamar</span></a></div>
+  </nav>
+</div>
+
+<header class="hero" id="inicio">
+  <div class="bento">
+    <div class="t t-titulo">
+      <p class="pill rv">{{PILL: rubro · barrio, p. ej. «Vivero · Adrogué»}}</p>
+      <h1>{{TITULAR: 5 a 9 palabras, con <em>palabra clave</em>}}</h1>
+      <p class="sub rv">{{SUBTITULO}}</p>
+      <div class="ctas rv">
+        <a class="btn btn-wa mag" href="https://wa.me/{{WHATSAPP}}?text={{MENSAJE_PREARMADO_URLENCODED}}">{{CTA_PRINCIPAL: Consultar por WhatsApp}}</a>
+        <a class="btn btn-borde mag" href="#productos">Ver {{NAV_CATALOGO_MINUSCULA: productos}}</a>
+      </div>
+    </div>
+    <div class="t t-foto"><div class="foto" data-nombre="Foto del local · assets/hero-salon.jpg"><img src="assets/hero-salon.jpg" alt="{{ALT_HERO}}" onerror="this.parentElement.classList.add('sin')"></div><span class="sticker">{{STICKER_HERO: un dato real de dos o tres palabras}}</span></div>
+    <div class="t t-prod"><div class="foto" data-nombre="Foto · assets/catalogo-01.jpg"><img src="assets/catalogo-01.jpg" alt="{{PRODUCTO_HERO_NOMBRE}}" onerror="this.parentElement.classList.add('sin')"></div><div class="etiqueta"><span>{{PRODUCTO_HERO_NOMBRE: el primer producto del catálogo}}</span><span>{{PRODUCTO_HERO_PRECIO o Consultar}}</span></div></div>
+    <div class="t t-cartel">
+      <!-- CARTEL: sin JS muestra el horario corto; con JS dice ABIERTO o CERRADO según los horarios de «Dónde» -->
+      <div class="cartel" role="status"><span class="hilos" aria-hidden="true"></span><span class="tabla"><b>{{CARTEL_TITULO: Horario}}</b><small>{{HORARIO_CORTO: p. ej. «Lun a sáb · 9 a 19»}}</small></span></div>
+    </div>
+  </div>
+</header>
+
+<section class="sec productos" id="productos">
+  <div class="wrap">
+    <span class="kicker rv">{{NAV_CATALOGO}}</span>
+    <h2 class="rv">{{TITULO_CATALOGO: con <em>una palabra</em> en el acento}}</h2>
+    <p class="lead rv">{{LEAD_CATALOGO}}</p>
+    <!-- FILTROS: un botón por categoría REAL, con el mismo texto que el data-cat de los productos. Si no hay categorías, borrá este bloque -->
+    <div class="filtros" role="group" aria-label="Filtrar por categoría"><button class="chip activo" type="button" data-filtro="*">Todo</button>{{FILTROS: un <button class="chip" type="button" data-filtro="Plantas">Plantas</button> por categoría}}</div>
+    <div class="grilla">
+      <!-- PRODUCTO: repetí este bloque por cada ítem REAL del brief o de la web vieja; foto assets/catalogo-0N.jpg. La etiqueta es opcional (Nuevo, Oferta) y solo si es real -->
+      <article class="prod rv" data-cat="{{ITEM_1_CATEGORIA}}"><div class="foto" data-nombre="Foto · assets/catalogo-01.jpg"><img src="assets/catalogo-01.jpg" alt="{{ITEM_1_NOMBRE}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"><span class="tag">{{ITEM_1_ETIQUETA: vacío si no hay}}</span></div>
+        <div class="texto"><h3>{{ITEM_1_NOMBRE}}</h3><p>{{ITEM_1_DETALLE}}</p><div class="pie2"><b class="precio">{{ITEM_1_PRECIO o Consultar}}</b><div class="acc"><button class="sumar" type="button" data-nombre="{{ITEM_1_NOMBRE}}" aria-label="Sumar {{ITEM_1_NOMBRE}} a la consulta" aria-pressed="false">+</button><a class="btn btn-borde" href="https://wa.me/{{WHATSAPP}}?text={{MENSAJE_ITEM_1_URLENCODED}}">Consultar</a></div></div></div></article>
+    </div>
+    <p class="nota rv">{{NOTA_CATALOGO: p. ej. «Stock sujeto a disponibilidad. Sumá varios con + y mandá una sola consulta»}}</p>
+  </div>
+</section>
+<!-- La barra de la consulta: aparece cuando sumás productos y arma un solo WhatsApp con todos -->
+<div class="consulta-barra" hidden data-wa="{{WHATSAPP}}" data-intro="{{MENSAJE_CONSULTA: Hola, quiero consultar por:}}"><span><b class="cuenta">0</b> en tu consulta</span><span><button class="vaciar" type="button">Vaciar</button> <a class="btn btn-wa" href="https://wa.me/{{WHATSAPP}}">Enviar por WhatsApp</a></span></div>
+
+<section class="sec vidriera" id="galeria" aria-label="{{ARIA_GALERIA: p. ej. Fotos del local y de los productos}}">
+  <div class="wrap"><span class="kicker rv">{{KICKER_GALERIA: La vidriera}}</span><h2 class="rv">{{TITULO_GALERIA}}</h2></div>
+  <div class="anillo"><div class="giro">
+    <figure class="foto" data-nombre="Foto 1 · assets/galeria-01.jpg"><img src="assets/galeria-01.jpg" alt="{{ALT_GALERIA_1}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"><figcaption class="pie">{{PIE_GALERIA_1}}</figcaption></figure>
+    <figure class="foto" data-nombre="Foto 2 · assets/galeria-02.jpg"><img src="assets/galeria-02.jpg" alt="{{ALT_GALERIA_2}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"><figcaption class="pie">{{PIE_GALERIA_2}}</figcaption></figure>
+    <figure class="foto" data-nombre="Foto 3 · assets/galeria-03.jpg"><img src="assets/galeria-03.jpg" alt="{{ALT_GALERIA_3}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"><figcaption class="pie">{{PIE_GALERIA_3}}</figcaption></figure>
+    <figure class="foto" data-nombre="Foto 4 · assets/galeria-04.jpg"><img src="assets/galeria-04.jpg" alt="{{ALT_GALERIA_4}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"><figcaption class="pie">{{PIE_GALERIA_4}}</figcaption></figure>
+    <figure class="foto" data-nombre="Foto 5 · assets/galeria-05.jpg"><img src="assets/galeria-05.jpg" alt="{{ALT_GALERIA_5}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"><figcaption class="pie">{{PIE_GALERIA_5}}</figcaption></figure>
+  </div></div>
+</section>
+
+<section class="sec local" id="local">
+  <div class="wrap grid2">
+    <div class="frente"><div class="toldo" aria-hidden="true"></div><div class="foto" data-nombre="Foto del local · assets/salon.jpg"><img src="assets/salon.jpg" alt="{{ALT_FOTO_GRANDE}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"></div></div>
+    <div>
+      <span class="kicker rv">{{NAV_FOTO_GRANDE}}</span>
+      <h2 class="rv">{{TITULO_FOTO_GRANDE}}</h2>
+      <p class="lead rv">{{LEAD_FOTO_GRANDE}}</p>
+      <p class="rv"><a class="btn btn-borde mag" href="#donde">Cómo llegar ↓</a></p>
+    </div>
+  </div>
+</section>
+
+<section class="sec motivos" id="motivos">
+  <div class="wrap">
+    <div class="cabeza"><span class="kicker rv">{{NAV_MOTIVOS: Por qué comprar acá}}</span><h2 class="rv">{{TITULO_MOTIVOS}}</h2></div>
+    <ul class="stickers">{{MOTIVOS: 3 <li> reales del brief, de 2 a 6 palabras}}</ul>
+    <div class="nums">
+      <!-- CONTADORES: solo números reales del brief (si no hay tres, dejá dos o sacá el bloque). El número va igual en data-n y en el texto -->
+      <div class="num rv"><b><span class="cnt" data-n="{{CONTADOR_1_NUMERO}}">{{CONTADOR_1_NUMERO}}</span>{{CONTADOR_1_SUFIJO: vacío, «+», «%»}}</b><small>{{CONTADOR_1_TEXTO}}</small></div>
+      <div class="num rv"><b><span class="cnt" data-n="{{CONTADOR_2_NUMERO}}">{{CONTADOR_2_NUMERO}}</span>{{CONTADOR_2_SUFIJO}}</b><small>{{CONTADOR_2_TEXTO}}</small></div>
+      <div class="num rv"><b><span class="cnt" data-n="{{CONTADOR_3_NUMERO}}">{{CONTADOR_3_NUMERO}}</span>{{CONTADOR_3_SUFIJO}}</b><small>{{CONTADOR_3_TEXTO}}</small></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec donde" id="donde">
+  <div class="wrap grid2">
+    <div>
+      <span class="kicker rv">Dónde y cuándo</span>
+      <h2 class="rv">{{DIRECCION_CORTA}}</h2>
+      <p class="lead rv">{{DIRECCION_COMPLETA_Y_REFERENCIA}} <a href="https://www.google.com/maps/search/?api=1&query={{DIRECCION_URLENCODED}}">Abrir en Google Maps</a></p>
+      <!-- HORARIOS: data-dias (0 domingo … 6 sábado) y data-abre / data-cierra en 24 h; con dos turnos, separados por coma (data-abre="9:00,16:00" data-cierra="13:00,20:00"). De acá salen «hoy» y el cartel -->
+      <div class="horas rv">{{HORARIOS: una fila por línea, <div data-dias="1,2,3,4,5,6" data-abre="9:00" data-cierra="19:00"><span>Lunes a sábado</span><b>9 a 19</b></div>}}</div>
+    </div>
+    <div class="mapa rv" aria-hidden="true">
+      <svg viewBox="0 0 400 400">
+        <g fill="none" stroke-width="2" style="stroke:rgba(var(--ink-rgb),.12)"><path d="M0 100 H400 M0 300 H400 M100 0 V400 M300 0 V400"/></g>
+        <rect x="118" y="118" width="164" height="164" rx="18" style="fill:rgba(var(--acc2-rgb),.18);stroke:var(--ink)" stroke-width="2"/>
+        <path d="M0 200 H400" stroke-width="22" style="stroke:var(--ink)"/><path d="M0 200 H400" stroke-width="16" stroke-dasharray="14 12" style="stroke:var(--papel)"/>
+        <path d="M200 0 V400" stroke-width="14" style="stroke:rgba(var(--acc-rgb),.75)"/>
+        <text x="16" y="236" font-size="14" font-weight="700" style="fill:var(--ink);font-family:var(--f-texto)">{{MAPA_CALLE}}</text>
+        <text x="212" y="30" font-size="14" font-weight="700" style="fill:var(--ink);font-family:var(--f-texto)">{{MAPA_REFERENCIA: calle o plaza cercana}}</text>
+      </svg>
+      <div class="pin"><b>{{NOMBRE}}</b><i></i></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec contacto" id="contacto">
+  <div class="wrap caja">
+    <span class="kicker">Contacto</span>
+    <h2 class="rv">{{TITULO_CONTACTO}}</h2>
+    <div class="ctas rv">
+      <a class="btn btn-wa mag" href="https://wa.me/{{WHATSAPP}}?text={{MENSAJE_PREARMADO_URLENCODED}}">WhatsApp {{WHATSAPP_VISIBLE}}</a>
+      <a class="btn btn-borde mag" href="tel:{{TELEFONO_TEL}}">Teléfono {{TELEFONO_VISIBLE}}</a>
+    </div>
+    <p class="mail rv"><a href="mailto:{{EMAIL}}">{{EMAIL}}</a></p>
+  </div>
+</section>
+
+<a class="wa-fijo btn btn-wa mag" href="https://wa.me/{{WHATSAPP}}?text={{MENSAJE_PREARMADO_URLENCODED}}" aria-label="Escribir por WhatsApp">WhatsApp</a>
+<footer>{{NOMBRE}} · {{DIRECCION_CORTA}} · {{QUE_HACE_CORTO}} · © {{AÑO}}</footer>
+
+<script>
+/* «Hoy» en los horarios y el cartel ABIERTO / CERRADO: no dependen de GSAP */
+(function(){var ahora=new Date(),d=String(ahora.getDay()),min=ahora.getHours()*60+ahora.getMinutes(),abierto=null,fila=null;
+  function m(t){var p=String(t).trim().split(':');return parseInt(p[0],10)*60+(parseInt(p[1],10)||0)}
+  document.querySelectorAll('.horas [data-dias]').forEach(function(f){if(f.getAttribute('data-dias').split(',').map(function(x){return x.trim()}).indexOf(d)<0)return;
+    f.classList.add('hoy');fila=f;var a=(f.dataset.abre||'').split(','),c=(f.dataset.cierra||'').split(',');if(!f.dataset.abre)return;abierto=abierto||false;
+    a.forEach(function(x,i){var fin=m(c[i]||'0');if(fin<=m(x))fin+=1440;if(min>=m(x)&&min<fin)abierto=true;});});
+  var cartel=document.querySelector('.cartel');if(!cartel)return;
+  if(abierto===null&&document.querySelector('.horas [data-abre]'))abierto=false;
+  if(abierto===null)return;
+  cartel.classList.toggle('cerrado',!abierto);cartel.querySelector('b').textContent=abierto?'Abierto':'Cerrado';
+  cartel.querySelector('small').textContent=fila?'Hoy: '+fila.querySelector('b').textContent:'Hoy no abrimos';})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  if(!window.gsap||!window.ScrollTrigger){document.documentElement.classList.remove('js');return;}
+  gsap.registerPlugin(ScrollTrigger);
+  gsap.ticker.lagSmoothing(0); /* para que las animaciones avancen también en renders headless */
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.classList.remove('js');return;}
+  var hover=matchMedia('(hover:hover)').matches, q=function(s,c){return (c||document).querySelector(s)}, qa=function(s,c){return [].slice.call((c||document).querySelectorAll(s))}, al=gsap.utils.random;
+
+  /* Estados iniciales (solo con GSAP cargado): así, sin JS la web se ve completa */
+  gsap.set('.rv',{opacity:0,y:26});
+  /* En el celular solo se arma al cargar lo que se ve; el resto, al llegar con el scroll y con menos desplazamiento */
+  var ancho=matchMedia('(min-width: 900px)').matches,tiles=qa('.bento .t'),abajo=ancho?[]:tiles.slice(1),dx=ancho?70:18;if(!ancho)tiles=tiles.slice(0,1);
+  gsap.set(tiles.concat(abajo),{opacity:0,scale:.8,rotation:function(){return al(-10,10)},x:function(){return al(-dx,dx)},y:function(){return al(40,100)}});
+  gsap.set('.hero h1',{opacity:0,y:30});
+  gsap.set('.sticker',{scale:0,rotation:-40});
+
+  /* Barra de arriba compacta, aviso que desfila y barra de progreso */
+  ScrollTrigger.create({start:40,onUpdate:function(s){q('#arriba').classList.toggle('compacta',s.scroll()>40)}});
+  gsap.to('.progreso',{scaleX:1,ease:'none',scrollTrigger:{start:0,end:'max',scrub:.3}});
+  var av=q('.aviso .track');if(av){av.innerHTML+=av.innerHTML;av.innerHTML+=av.innerHTML;gsap.to(av,{xPercent:-50,duration:26,ease:'none',repeat:-1});}
+
+  /* Hero: el mosaico se arma, el sticker salta y el cartel se hamaca */
+  var tl=gsap.timeline({defaults:{ease:'back.out(1.5)'}});
+  tl.to(tiles,{opacity:1,scale:1,rotation:0,x:0,y:0,duration:1,stagger:.1},.1)
+    .to('.hero h1',{opacity:1,y:0,duration:.9,ease:'power3.out'},.45)
+    .to('.hero .rv',{opacity:1,y:0,duration:.8,stagger:.1,ease:'power3.out'},.6)
+    .to('.sticker',{scale:1,rotation:10,duration:.8,ease:'back.out(3)'},1.1)
+    .fromTo('.cartel',{rotation:-24},{rotation:0,duration:2.4,ease:'elastic.out(1,.22)'},1);
+  gsap.to('.cartel',{rotation:2.5,duration:2.2,yoyo:true,repeat:-1,ease:'sine.inOut',delay:3.6});
+  abajo.forEach(function(b){gsap.to(b,{opacity:1,scale:1,rotation:0,x:0,y:0,duration:.9,ease:'back.out(1.5)',scrollTrigger:{trigger:b,start:'top 92%'}})});
+  var mm=gsap.matchMedia();
+  mm.add('(min-width: 900px)',function(){[['.t-foto',-14],['.t-prod',-6],['.t-cartel',-22]].forEach(function(p){
+    gsap.to(p[0],{yPercent:p[1],ease:'none',scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:true}})});});
+
+  /* Reveals: cada bloque aparece cuando llega */
+  ScrollTrigger.batch('.sec .rv',{start:'top 88%',onEnter:function(b){gsap.to(b,{opacity:1,y:0,duration:.8,ease:'power3.out',stagger:.07,overwrite:true})}});
+
+  /* Filtros: los productos que no van se achican y los que quedan entran de a uno */
+  var prods=qa('.prod');
+  qa('.chip').forEach(function(ch){ch.addEventListener('click',function(){
+    qa('.chip').forEach(function(c){c.classList.toggle('activo',c===ch)});var f=ch.dataset.filtro;
+    var van=prods.filter(function(p){return f==='*'||p.dataset.cat===f}),salen=prods.filter(function(p){return van.indexOf(p)<0});
+    gsap.to(salen,{opacity:0,scale:.85,duration:.25,overwrite:true,onComplete:function(){salen.forEach(function(p){p.style.display='none'});
+      van.forEach(function(p){p.style.display=''});gsap.fromTo(van,{opacity:0,y:24,scale:.95},{opacity:1,y:0,scale:1,duration:.5,stagger:.06,ease:'back.out(1.6)',overwrite:true});ScrollTrigger.refresh();}});
+    if(!salen.length)gsap.fromTo(van,{opacity:0,y:24},{opacity:1,y:0,duration:.5,stagger:.05,overwrite:true});});});
+
+  /* Sumar a la consulta: un solo WhatsApp con todos los productos elegidos */
+  var barra=q('.consulta-barra'),elegidos=[],cuentas=qa('.cuenta'),wafijo=q('.wa-fijo');
+  function actualizar(){cuentas.forEach(function(c){c.textContent=elegidos.length});
+    if(!barra)return;var txt=(barra.dataset.intro||'')+'\n'+elegidos.map(function(n){return '- '+n}).join('\n');
+    q('a',barra).href='https://wa.me/'+barra.dataset.wa+'?text='+encodeURIComponent(txt);
+    if(elegidos.length&&barra.hidden){barra.hidden=false;gsap.fromTo(barra,{y:120},{y:0,duration:.6,ease:'back.out(1.6)'});gsap.to(wafijo,{autoAlpha:0,duration:.2});}
+    if(!elegidos.length&&!barra.hidden){gsap.to(barra,{y:140,duration:.35,onComplete:function(){barra.hidden=true}});gsap.to(wafijo,{autoAlpha:1,duration:.3});}}
+  qa('.sumar').forEach(function(b){b.addEventListener('click',function(){var n=b.dataset.nombre,i=elegidos.indexOf(n);
+    if(i>-1){elegidos.splice(i,1);b.classList.remove('en');b.textContent='+';b.setAttribute('aria-pressed','false');}
+    else{elegidos.push(n);b.classList.add('en');b.textContent='✓';b.setAttribute('aria-pressed','true');
+      var o=b.getBoundingClientRect(),dst=q('.cuenta-nav .cuenta').getBoundingClientRect(),p=document.createElement('i');p.className='punto-vuela';document.body.appendChild(p);
+      gsap.set(p,{x:o.left+o.width/2,y:o.top+o.height/2});
+      gsap.to(p,{x:dst.left+dst.width/2,duration:.7,ease:'power1.inOut'});
+      gsap.to(p,{y:dst.top+dst.height/2,duration:.7,ease:'back.in(1.4)',onComplete:function(){p.remove();gsap.fromTo(cuentas,{scale:1.8},{scale:1,duration:.8,ease:'elastic.out(1,.3)'});}});}
+    actualizar();});});
+  if(barra)q('.vaciar',barra).addEventListener('click',function(){elegidos=[];qa('.sumar').forEach(function(b){b.classList.remove('en');b.textContent='+';b.setAttribute('aria-pressed','false')});actualizar();});
+
+  /* La vidriera gira en 3D mientras la sección queda fija */
+  var an=q('.anillo'),fotos=qa('.anillo .foto');
+  if(an&&fotos.length>2){mm.add('(min-width: 1px)',function(){
+    var w=Math.min(innerWidth*(innerWidth<700?.5:.24),300),n=fotos.length,r=Math.round(w/2/Math.tan(Math.PI/n))+50;
+    an.classList.add('en3d');an.style.setProperty('--w',w+'px');
+    fotos.forEach(function(f,i){f.style.transform='rotateY('+(i*360/n)+'deg) translateZ('+r+'px)'}); /* primero girar y después alejar: por eso no va con gsap.set */
+    gsap.fromTo(q('.giro',an),{rotationY:0,z:-r},{rotationY:-(360-360/n),z:-r,ease:'none',scrollTrigger:{trigger:'.vidriera',start:function(){return 'top '+q('#arriba').offsetHeight},end:'+=170%',pin:true,scrub:.8,invalidateOnRefresh:true}});
+    return function(){an.classList.remove('en3d');fotos.forEach(function(f){f.style.transform=''})};});}
+
+  /* El toldo se despliega con rebote */
+  qa('.toldo').forEach(function(t){gsap.fromTo(t,{scaleY:0},{scaleY:1,duration:1.4,ease:'elastic.out(1,.45)',scrollTrigger:{trigger:t,start:'top 80%'}})});
+  gsap.utils.toArray('.frente .foto').forEach(function(f){gsap.fromTo(q('img',f),{scale:1.2},{scale:1,ease:'none',scrollTrigger:{trigger:f,start:'top bottom',end:'bottom top',scrub:true}})});
+
+  /* Motivos: los stickers saltan y giran con el scroll */
+  qa('.stickers li').forEach(function(s,i){var g=[-14,9,-6][i%3];
+    gsap.from(s,{scale:0,rotation:g*4,duration:.9,ease:'back.out(2)',delay:i*.12,scrollTrigger:{trigger:'.stickers',start:'top 85%'}});
+    gsap.fromTo(s,{rotation:g},{rotation:-g,ease:'none',scrollTrigger:{trigger:'.stickers',start:'top bottom',end:'bottom top',scrub:true}});});
+
+  /* Contadores reales */
+  qa('.cnt').forEach(function(el){var n=parseInt(el.dataset.n,10);if(isNaN(n))return;
+    ScrollTrigger.create({trigger:el,start:'top 88%',once:true,onEnter:function(){gsap.fromTo(el,{innerText:0},{innerText:n,duration:1.4,ease:'power2.out',snap:{innerText:1}})}});});
+
+  /* El pin del mapa cae */
+  gsap.from('.mapa .pin',{y:-60,opacity:0,duration:1,ease:'bounce.out',scrollTrigger:{trigger:'.mapa',start:'top 75%'}});
+
+  /* Botones magnéticos con quickTo (no gsap.to en mousemove) */
+  if(hover){qa('.mag').forEach(function(b){
+    var qx=gsap.quickTo(b,'x',{duration:.35,ease:'power3'}),qy=gsap.quickTo(b,'y',{duration:.35,ease:'power3'});
+    b.addEventListener('mousemove',function(e){var r=b.getBoundingClientRect();qx((e.clientX-r.left-r.width/2)*.3);qy((e.clientY-r.top-r.height/2)*.4)});
+    b.addEventListener('mouseleave',function(){gsap.to(b,{x:0,y:0,duration:.6,ease:'elastic.out(1,.4)'})});
+  });}
+})();
+</script>
+</body>
+</html>

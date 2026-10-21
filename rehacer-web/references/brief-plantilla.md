@@ -29,6 +29,7 @@ Se completa con el dueño, en 10 minutos. Lo que no sabe, queda en blanco: **no 
 - **Fotos reales que tiene** (del local, del trabajo, del equipo; cuáles se pueden usar):
 - **Logo** (sí/no; archivo):
 - **Colores** que ya usa (en el local, en el cartel, en Instagram):
+- **Estilo de página** (el esqueleto: Noche, Mantel, Aire, Pulso o Vidriera; ver `plantilla/COMO-USAR-EL-ESQUELETO.md`):
 - **Textos legales** que necesita mostrar (CUIT, matrícula, habilitación; solo si corresponde):
 
 ## Lo que NO va

@@ -1,6 +1,6 @@
 # Kit «rehacer-web» · instrucciones para Claude Code
 
-Kit para rehacer la web vieja de un negocio chico con IA: audita la web actual, arma el brief con lo que ya dice la web, genera una página nueva de una sola pantalla con scroll animado (GSAP), la valida, la revisa en celular y escritorio, deja todo listo para publicar gratis en Netlify, mide el antes y el después y arma los mensajes para ofrecérsela al dueño.
+Kit para rehacer la web vieja de un negocio chico con IA: audita la web actual, arma el brief con lo que ya dice la web, genera una página nueva de una sola pantalla con scroll animado (GSAP), en uno de cinco estilos, la valida, la revisa en celular y escritorio, deja todo listo para publicar gratis en Netlify, mide el antes y el después y arma los mensajes para ofrecérsela al dueño.
 
 Hablá en castellano claro, con voseo y sin jerga; si aparece un término técnico, explicalo en una frase. La persona no toca la terminal: vos ejecutás y ella confirma. Cada mensaje termina con la siguiente acción concreta, en una línea.
 
@@ -25,6 +25,7 @@ Todo lo que se pueda elegir o confirmar va como **pregunta de opción múltiple*
 | «no tiene web» | Saltá el paso 1; empezá el brief desde cero (paso 2) |
 | «te dejé las fotos», «no tengo fotos», «buscalas vos» | Paso 3 · fotos: las del dueño, las de su propia web con el buscador, o sin fotos |
 | «cambiá el color / el texto / el orden», «sacá…» | Editá `webs/<negocio>/index.html`, volvé a validar y a mirar (paso 5) |
+| «otro estilo», «cambiá el diseño», «que no se parezca a la otra» | Otro esqueleto con el mismo brief y las mismas fotos (paso 4, «Probá con otro estilo»); validá y mirá de nuevo |
 | «publicala», «¿cómo la subo?» | Paso 6 · publicar |
 | «medila», «¿cómo quedó?» | Paso 7 · medir el después |
 | «¿cómo se la ofrezco?», «escribile al dueño», «armame el mensaje» | Paso 8 · los mensajes en `mensajes.md`; los manda la persona |
@@ -47,4 +48,4 @@ El procedimiento completo, paso a paso, está en `rehacer-web/SKILL.md`. Leelo a
 
 - `entrada/` lo que trae la persona: el HTML de la web vieja (si no hay link), el logo y las fotos.
 - `webs/<negocio>/` cada trabajo: `auditoria.md` y `auditoria.html` (el antes), `fotos-candidatas/` (las fotos de su web, para elegir), `brief.md`, `index.html` (la web nueva), `mensajes.md` (para ofrecérsela), `assets/` (fotos con nombres fijos), `gate/` (capturas de revisión). Esa carpeta es la que se publica, sin `gate/` ni los `.md`.
-- `rehacer-web/` la skill: `SKILL.md` (procedimiento), `scripts/` (auditor, buscador de fotos, validador, medidor), `plantilla/` (esqueleto con el scroll ya hecho), `references/` (prompt, brief, fotos, gate visual, publicar, ofrecer al dueño).
+- `rehacer-web/` la skill: `SKILL.md` (procedimiento), `scripts/` (auditor, buscador de fotos, validador, medidor), `plantilla/` (cinco esqueletos con el scroll ya hecho, cada uno con su estilo, y cómo elegirlos), `references/` (prompt, brief, fotos, gate visual, publicar, ofrecer al dueño).

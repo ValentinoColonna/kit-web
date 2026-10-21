@@ -1,6 +1,6 @@
 # Imágenes · de dónde salen, cómo se nombran, cómo se integran
 
-La página siempre lleva marcos para fotos (hero, foto grande, banda de galería y catálogo). Las fotos salen de estos lugares, en este orden de preferencia:
+La página siempre lleva marcos para fotos (hero, foto grande, galería y catálogo), en los cinco esqueletos y con los mismos nombres de archivo. Las fotos salen de estos lugares, en este orden de preferencia:
 
 1. **Del dueño** (celular, Instagram, lo que tenga), en `entrada/`. Son las que mejor muestran su negocio.
 2. **De la propia web del negocio:** `python3 rehacer-web/scripts/buscar_fotos.py <link> --salida webs/<negocio>/fotos-candidatas`. Son fotos que el negocio ya publicó (galería, productos, fichas de unidades). Se miran una por una antes de usar ninguna.
@@ -17,6 +17,14 @@ El código apunta a estos archivos en `assets/`; reemplazar una foto es copiar o
 | `salon.jpg` | Foto grande que se revela | 1600×1200 (4:3) |
 | `galeria-01.jpg` … `galeria-05.jpg` | Banda de galería (alternan vertical 3:4 y horizontal 4:3) | 1200 px el lado mayor |
 | `catalogo-01.jpg` … `catalogo-NN.jpg` | Tarjetas del catálogo / carta / servicios | 1200×900 (4:3) |
+| `antes.jpg` y `despues.jpg` | Antes y después deslizable (solo Pulso, opcional) | 1600×1000, las dos del mismo encuadre |
+
+Dónde se ve cada una según el esqueleto:
+- **Noche:** `hero-salon` de fondo del hero, enmascarada; `salon` grande con texto al lado; la galería en una banda que desfila.
+- **Mantel:** `hero-salon` en el arco que se abre a pantalla completa; `salon` detrás del telón; la galería en polaroids; `catalogo` en la foto redonda de cada plato y en la que sigue al mouse.
+- **Aire:** `hero-salon` vertical junto al titular (un buen retrato del lugar o del profesional); `salon` amplia; la galería en mosaico.
+- **Pulso:** todas en duotono con el acento (al pasar el mouse vuelven al color); `hero-salon` en la tarjeta inclinada; `salon` junto al mapa, en «Dónde»; la galería en columnas.
+- **Vidriera:** `hero-salon` y `catalogo-01` en el mosaico del hero; `salon` bajo el toldo; la galería en la vidriera giratoria.
 
 ## Catálogo, carta o servicios con foto (por rubro)
 Mismo componente, distinto contenido: concesionaria → vehículos (marca, modelo, año, «consultar»); restaurante → platos (nombre, descripción corta, precio real); clínica → especialidades o profesionales; estética → servicios con precio; tienda → productos. Cada tarjeta: foto con velo de la paleta, título, una línea, y el CTA de WhatsApp con mensaje prearmado que nombra el ítem. Sin precios inventados: si el brief no tiene precio, «Consultar».

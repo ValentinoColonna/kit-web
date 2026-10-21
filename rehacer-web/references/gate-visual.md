@@ -19,7 +19,7 @@ printf '<!doctype html><meta charset=utf-8><style>html,body{margin:0}iframe{bord
   --window-size=375,812 --force-device-scale-factor=2 --virtual-time-budget=8000 --screenshot=gate/movil-js.png "file://$PWD/_movil.html"
 
 # 3 · Sin JS (estructura y SEO): una copia sin <script> (menos el JSON-LD) y sin el hero a pantalla completa, alta.
-#     Altos de 7000 y 9000 px: si la página es más larga (un catálogo grande), subilos hasta que se vea el pie.
+#     Altos de 7000 y 9000 px: si la página es más larga (un catálogo grande o los esqueletos Aire y Pulso), subilos (9000 y 12000) hasta que se vea el pie.
 python3 - <<'EOF'
 import re;t=open('index.html',encoding='utf-8').read()
 t=re.sub(r'<script(?! type="application/ld\+json")[^>]*>.*?</script>','',t,flags=re.S)

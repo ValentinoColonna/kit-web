@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<!--
+ESQUELETO «MANTEL» · rehacer-web · editorial cálido, para gastronomía (restaurante, bodegón, café, panadería, heladería, catering)
+Mecánica YA HECHA y probada con el gate visual: GSAP + ScrollTrigger. Hero «la ventana»: titular serif que entra letra por letra y una
+foto en arco que, al bajar, se abre hasta llenar la pantalla (sección fija en escritorio); manifiesto que se enciende palabra por palabra;
+la carta con puntos guía y una foto que sigue al mouse; ticket que se imprime (momento firma); telón que se abre sobre la foto del salón;
+polaroids que caen sobre un mantel a cuadros; mapa en un plato; sello giratorio que acelera con el scroll; contadores reales; botones
+magnéticos; barra de progreso; nav sin blur; degradación sin JS; reduced-motion.
+Imágenes swap-ready (assets/hero-salon.jpg, salon.jpg, galeria-01..05.jpg, catalogo-01..NN.jpg); si faltan, el marco muestra un panel.
+Tu trabajo: completar los slots {{...}} con el brief, repetir el plato de la carta por cada ítem REAL (y la categoría por cada categoría
+real), adaptar nombres de sección al rubro, sacar lo que no aplique y reemplazar el «momento firma» (el ticket) si hay uno más propio.
+Reglas: no inventes datos; lo que falte queda como [PLACEHOLDER] visible (validá con --borrador); no agregues librerías;
+no backdrop-filter en la nav; no gsap.to dentro de mousemove; estados iniciales ocultos solo en gsap.set.
+Al terminar: python3 rehacer-web/scripts/validar_sitio.py index.html y el gate de references/gate-visual.md.
+-->
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITULO_SEO: nombre + qué hace + ciudad, 10 a 70 caracteres}}</title>
+<meta name="description" content="{{DESCRIPCION_SEO: una frase de 50 a 170 caracteres con qué hace, para quién y dónde}}">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- FUENTES: par por defecto de «Mantel». Otros pares probados en COMO-USAR-EL-ESQUELETO.md; si lo cambiás, cambiá también --f-display y --f-texto -->
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..800;1,9..144,400..700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"{{TIPO_SCHEMA: Restaurant, Bakery, CafeOrCoffeeShop, BarOrPub, IceCreamShop}}","name":"{{NOMBRE}}","url":"{{URL}}","telephone":"{{TELEFONO_INTERNACIONAL}}","email":"{{EMAIL}}","address":{"@type":"PostalAddress","streetAddress":"{{CALLE_Y_NUMERO}}","addressLocality":"{{LOCALIDAD}}","addressRegion":"{{PROVINCIA}}","postalCode":"{{CP}}","addressCountry":"AR"},"openingHours":["{{HORARIO_SCHEMA_1}}","{{HORARIO_SCHEMA_2}}"]}
+</script>
+<style>
+/* ===== Sistema cerrado: papel cálido, tinta marrón, UN acento del negocio (tomate, vino, mostaza…), secundario con cuentagotas ===== */
+:root{--bg:{{FONDO: papel cálido claro, hex (p. ej. #f4ede2)}};--bg-rgb:{{FONDO_RGB: el mismo color en r,g,b}};--bg2:{{FONDO2: el papel un punto más oscuro}};--papel:#fbf8f2;--ink:#2a1e18;--ink-rgb:42,30,24;--ink2:#5f4f44;--muted:#8a796c;--acc:{{ACENTO: el color fuerte del negocio, hex}};--acc-rgb:{{ACENTO_RGB: r,g,b}};--acc-claro:{{ACENTO_CLARO: el acento más claro}};--sobre-acc:{{TEXTO_SOBRE_ACENTO: casi blanco cálido}};--acc2:{{SECUNDARIO: hex}};--acc2-rgb:{{SECUNDARIO_RGB: r,g,b}};--wa:#25d366;--r:22px;--r2:14px;--f-display:"Fraunces",Georgia,serif;--f-texto:"Work Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-texto);font-size:17px;line-height:1.6;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+::selection{background:var(--acc);color:var(--sobre-acc)}
+h1,h2,h3,h4{font-family:var(--f-display);font-weight:500;letter-spacing:-.02em;text-wrap:balance;margin:0}
+a{color:inherit}
+.skip{position:absolute;left:-999px;top:8px;background:var(--acc);color:var(--sobre-acc);padding:8px 12px;border-radius:8px;z-index:99}.skip:focus{left:8px}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+section{scroll-margin-top:80px}
+.grano{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.07;mix-blend-mode:multiply;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.progreso{position:fixed;left:0;top:0;height:3px;width:100%;transform:scaleX(0);transform-origin:0 50%;background:var(--acc);z-index:50}
+
+/* ===== Nav: nombre al centro (en celular a la izquierda), fondo sólido, sin blur ===== */
+nav{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 20px;transition:background .4s,padding .4s,box-shadow .4s}
+nav.compacta{background:rgba(var(--bg-rgb),.97);padding:10px 20px;box-shadow:0 1px 0 rgba(var(--ink-rgb),.1)}
+nav .marca{font-family:var(--f-display);font-style:italic;font-weight:600;font-size:1.35rem;line-height:1;text-decoration:none}
+nav .marca small{display:block;font-family:var(--f-texto);font-style:normal;font-weight:500;font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink2);margin-top:5px}
+nav .links{display:flex;align-items:center;gap:24px;font-size:.92rem;color:var(--ink2)}
+nav .links a:not(.btn){display:none;text-decoration:none}nav .links a:hover{color:var(--ink)}
+nav .izq{display:none}
+@media(min-width:900px){nav{display:grid;grid-template-columns:1fr auto 1fr}nav .izq{display:flex}nav .der{justify-content:flex-end}nav .links a:not(.btn){display:inline}nav .marca{text-align:center}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;text-decoration:none;font-weight:600;padding:12px 22px;border-radius:999px;font-size:1rem;will-change:transform}
+.btn-acc{background:var(--acc);color:var(--sobre-acc);box-shadow:0 10px 26px rgba(var(--acc-rgb),.28)}
+.btn-wa{background:var(--wa);color:#08210f;box-shadow:0 10px 26px rgba(37,211,102,.25)}
+.btn-ghost{border:1.5px solid rgba(var(--ink-rgb),.28)}.btn-ghost:hover{border-color:var(--ink)}
+
+/* ===== Paneles: lo que muestra un marco cuando falta la foto ===== */
+.foto,.ventana,.capa,.vista{background-color:var(--bg2);background-image:radial-gradient(circle at 28% 22%,rgba(var(--acc-rgb),.22),transparent 62%),radial-gradient(circle at 78% 86%,rgba(var(--acc2-rgb),.26),transparent 58%)}
+.foto{position:relative;overflow:hidden;border-radius:var(--r);isolation:isolate}
+.foto img{display:block;width:100%;height:100%;object-fit:cover;will-change:transform}
+.foto.sin img,.capa.sin img,.vista.sin img{display:none}
+.foto.sin::before,.ventana::before,.capa.sin::before{content:attr(data-nombre);position:absolute;inset:0;display:grid;place-items:center;padding:18px;text-align:center;font-family:var(--f-display);font-style:italic;font-size:1rem;line-height:1.3;color:rgba(var(--ink-rgb),.5)}
+.mini.sin::before{content:"";background:radial-gradient(circle,rgba(var(--acc-rgb),.35) 2px,transparent 3px) 0 0/10px 10px}
+
+/* ===== Hero «la ventana»: el titular rodea una foto en arco que después se abre ===== */
+.hero{min-height:100svh;position:relative;display:flex;flex-direction:column;justify-content:center;padding:104px 20px 40px;overflow:hidden;isolation:isolate}
+.hero .cont{max-width:1240px;width:100%;margin:0 auto;position:relative;z-index:2}
+.kicker{display:inline-flex;align-items:center;gap:10px;font-size:.78rem;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--acc);margin:0 0 18px}
+.kicker::before{content:"";width:28px;height:1.5px;background:currentColor}
+.hero h1{font-size:clamp(2.7rem,min(8vw,12.5vh),7.6rem);line-height:.94;letter-spacing:-.035em;font-weight:400;font-variation-settings:"opsz" 144}
+.hero h1 .l1,.hero h1 .l2{display:block}.hero h1 .l2{text-align:right}
+.hero h1 em{font-style:italic;color:var(--acc)}
+.hero .w{display:inline-block;white-space:nowrap}.hero .c{display:inline-block}
+.ventana{display:block;position:relative;overflow:hidden;margin:.14em auto;width:clamp(150px,24vw,340px);height:clamp(190px,32vh,360px);border-radius:50% 50% 18px 18px/40% 40% 18px 18px}
+.ventana::after{content:"";position:absolute;inset:0;background:var(--foto) center/cover no-repeat;transform:scale(var(--z,1.06))}
+.hero .bajo{display:grid;gap:22px;margin-top:26px}
+@media(min-width:900px){.hero .bajo{grid-template-columns:1fr auto;align-items:end}}
+.hero .sub{max-width:46ch;color:var(--ink2);font-size:1.1rem;margin:0 0 20px}
+.hero .ctas{display:flex;flex-wrap:wrap;gap:12px}
+.capa{display:none;position:absolute;inset:0;z-index:3;pointer-events:none}
+.capa img{display:block;width:100%;height:100%;object-fit:cover;will-change:transform}
+.capa::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(var(--ink-rgb),0) 45%,rgba(var(--ink-rgb),.55))}
+.capa .frase{position:absolute;left:0;right:0;bottom:11vh;z-index:2;margin:0;padding:0 24px;text-align:center;text-wrap:balance;font-family:var(--f-display);font-style:italic;font-size:clamp(2rem,5vw,4.4rem);line-height:1.05;color:var(--papel)}
+.capa.sin .frase{color:var(--ink)}.capa.sin::after,.capa.sin::before{display:none}
+.giro{display:none;position:absolute;right:max(24px,6vw);top:calc(50% - 105px);z-index:4;width:136px;height:136px;text-decoration:none;color:var(--ink)}
+@media(min-width:900px){.giro{display:block}}
+.giro svg{width:100%;height:100%;overflow:visible}
+.giro text{font-family:var(--f-texto);font-size:11.4px;font-weight:600;letter-spacing:.3em;text-transform:uppercase;fill:var(--ink)}
+.giro span{position:absolute;inset:36px;border-radius:50%;background:var(--acc);color:var(--sobre-acc);display:grid;place-items:center;font-size:1.5rem}
+
+/* ===== Secciones ===== */
+.sec{padding:110px 20px;position:relative}
+.wrap{max-width:1180px;margin:0 auto}
+h2{font-size:clamp(2.1rem,5vw,4rem);line-height:1;max-width:18ch}
+h2 em{font-style:italic;color:var(--acc)}
+.lead{color:var(--ink2);font-size:1.1rem;max-width:52ch;margin:18px 0 0}
+
+/* Manifiesto: se enciende palabra por palabra */
+.manifiesto .grande{font-family:var(--f-display);font-size:clamp(1.65rem,4vw,3.3rem);line-height:1.18;letter-spacing:-.02em;max-width:26ch;margin:0}
+.modos{list-style:none;padding:0;margin:34px 0 0;display:flex;flex-wrap:wrap;gap:10px}
+.modos li{border:1.5px solid rgba(var(--ink-rgb),.2);border-radius:999px;padding:8px 16px;font-size:.92rem}
+
+/* La carta: puntos guía, foto redonda y una foto grande que sigue al mouse */
+.carta{background:var(--papel);border-top:1px solid rgba(var(--ink-rgb),.08);border-bottom:1px solid rgba(var(--ink-rgb),.08)}
+.carta .cabeza{text-align:center;max-width:720px;margin:0 auto 56px}.carta .cabeza h2{margin:0 auto}.carta .cabeza .lead{margin:18px auto 0}
+.grupos{display:grid;gap:56px 72px}
+@media(min-width:1000px){.grupos{grid-template-columns:1fr 1fr}}
+.cat{font-style:italic;font-size:1.7rem;color:var(--acc);padding-bottom:10px;margin-bottom:6px;border-bottom:1.5px solid rgba(var(--ink-rgb),.14)}
+.plato{display:grid;grid-template-columns:54px 1fr auto;gap:14px;align-items:center;padding:14px 0;border-bottom:1px dashed rgba(var(--ink-rgb),.16)}
+.mini{width:54px;height:54px;border-radius:50%}
+.plato .linea{display:flex;align-items:baseline;gap:10px}
+.plato h4{font-size:1.2rem;line-height:1.2}
+.plato .guia{flex:1;min-width:14px;border-bottom:2px dotted rgba(var(--ink-rgb),.3);transform:translateY(-.3em)}
+.plato .precio{font-family:var(--f-display);font-size:1.12rem;white-space:nowrap}
+.plato p{margin:3px 0 0;color:var(--ink2);font-size:.95rem;line-height:1.45}
+.pedir{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:999px;border:1.5px solid rgba(var(--acc-rgb),.5);color:var(--acc);font-size:.84rem;font-weight:600;text-decoration:none;transition:background .3s,color .3s}
+.pedir:hover{background:var(--acc);color:var(--sobre-acc)}
+@media(max-width:599px){.plato{grid-template-columns:48px 1fr;align-items:start}.mini{width:48px;height:48px}.pedir{grid-column:2;justify-self:start;min-height:40px;margin-top:-4px}}
+.carta .nota{text-align:center;color:var(--muted);font-size:.9rem;margin:40px auto 0;max-width:60ch}
+.vista{display:none;position:fixed;left:0;top:0;width:250px;aspect-ratio:4/5;border-radius:20px;overflow:hidden;pointer-events:none;z-index:30;box-shadow:0 30px 70px rgba(var(--ink-rgb),.3)}
+.vista img{display:block;width:100%;height:100%;object-fit:cover}
+.vista span{position:absolute;left:14px;right:14px;bottom:12px;z-index:2;font-family:var(--f-display);font-style:italic;font-size:1.1rem;line-height:1.2;color:var(--papel);text-shadow:0 2px 14px rgba(0,0,0,.45)}
+.vista.sin span{color:var(--ink);text-shadow:none}
+
+/* Motivos + ticket que se imprime (momento firma) */
+.motivos .grid2{display:grid;gap:56px;align-items:center}
+@media(min-width:900px){.motivos .grid2{grid-template-columns:1.1fr .9fr}}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:34px}
+.num b{display:block;font-family:var(--f-display);font-size:clamp(2.2rem,5vw,3.6rem);font-weight:500;line-height:1;color:var(--acc)}
+.num small{display:block;margin-top:6px;color:var(--ink2);font-size:.9rem;line-height:1.35}
+.impresora{max-width:380px;width:100%;margin:0 auto}
+.boca{height:22px;border-radius:12px;background:var(--ink);box-shadow:inset 0 -6px 0 rgba(0,0,0,.35);position:relative;z-index:2}
+.salida{overflow:hidden;margin:-8px 14px 0;padding:0 0 18px}
+.ticket{position:relative;background:var(--papel);padding:30px 24px 22px;font-family:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;font-size:.86rem;line-height:1.45;color:#2b2622;box-shadow:0 14px 26px rgba(var(--ink-rgb),.12)}
+.ticket::after{content:"";position:absolute;left:0;right:0;bottom:-12px;height:12px;background:linear-gradient(135deg,var(--papel) 50%,transparent 50%) 0 0/16px 12px repeat-x,linear-gradient(225deg,var(--papel) 50%,transparent 50%) 0 0/16px 12px repeat-x}
+.t-cab{text-align:center;margin:0 0 14px;text-transform:uppercase;letter-spacing:.08em}
+.t-cab b{font-family:var(--f-display);font-style:italic;font-weight:600;font-size:1.35rem;letter-spacing:0;text-transform:none}
+.t-sub{text-align:center;margin:0 0 12px;padding:6px 0;border-top:1px dashed rgba(0,0,0,.35);border-bottom:1px dashed rgba(0,0,0,.35);font-size:.76rem;letter-spacing:.14em;text-transform:uppercase}
+.ticket ul{list-style:none;padding:0;margin:0 0 14px}.ticket li{display:flex;gap:10px;padding:5px 0}.ticket li span{flex:0 0 auto;opacity:.55}
+.t-total{display:flex;justify-content:space-between;gap:12px;margin:0 0 14px;padding-top:10px;border-top:1px dashed rgba(0,0,0,.35);font-weight:700;text-transform:uppercase}
+.barras{height:38px;margin:4px 12px 8px;opacity:.85;background:repeating-linear-gradient(90deg,#2b2622 0 2px,transparent 2px 4px,#2b2622 4px 5px,transparent 5px 8px,#2b2622 8px 11px,transparent 11px 12px)}
+.t-pie{text-align:center;margin:0;font-size:.76rem;letter-spacing:.12em;text-transform:uppercase}
+
+/* El salón: telón que se abre sobre la foto */
+.salon{padding-bottom:160px}
+.salon .foto.grande{aspect-ratio:16/9;border-radius:28px}
+@media(max-width:899px){.salon .foto.grande{aspect-ratio:4/5}}
+.telon{position:absolute;top:0;bottom:0;width:50.5%;z-index:3;transform:scaleX(0);background:repeating-linear-gradient(90deg,rgba(0,0,0,.16) 0 3px,transparent 3px 26px,rgba(255,255,255,.08) 26px 29px,transparent 29px 52px),var(--acc)}
+.telon.izq{left:0;transform-origin:0 50%}.telon.der{right:0;transform-origin:100% 50%}
+.cartel{position:relative;z-index:4;max-width:520px;margin:-56px 14px 0;padding:30px;border-radius:var(--r);background:var(--papel);box-shadow:0 24px 60px rgba(var(--ink-rgb),.14)}
+.cartel .btn{margin-top:22px}
+@media(min-width:900px){.cartel{position:absolute;left:40px;bottom:-60px;margin:0}}
+
+/* La mesa: polaroids sobre un mantel a cuadros */
+.mesa{padding:110px 0 120px;overflow:hidden;background-color:var(--bg2);background-image:linear-gradient(90deg,rgba(var(--acc-rgb),.09) 50%,transparent 0),linear-gradient(rgba(var(--acc-rgb),.09) 50%,transparent 0);background-size:56px 56px}
+.mesa .wrap{padding:0 20px;text-align:center}.mesa h2{margin:0 auto}
+.polas{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;padding:40px 20px 30px;scrollbar-width:none}
+.polas::-webkit-scrollbar{display:none}
+.pola{flex:0 0 min(72vw,300px);scroll-snap-align:center;margin:0;padding:12px 12px 14px;border-radius:6px;background:var(--papel);box-shadow:0 18px 40px rgba(var(--ink-rgb),.18);transform:rotate(var(--r,0deg))}
+.pola .foto{aspect-ratio:4/5;border-radius:3px}
+.pola figcaption{padding:10px 4px 2px;text-align:center;font-family:var(--f-display);font-style:italic;font-size:1.05rem;line-height:1.3}
+@media(min-width:900px){.polas{display:grid;grid-template-columns:repeat(12,1fr);gap:0 10px;overflow:visible;max-width:1180px;margin:0 auto;padding:60px 20px 40px}
+.pola:nth-child(1){grid-column:1/5}.pola:nth-child(2){grid-column:5/9;margin-top:90px}.pola:nth-child(3){grid-column:9/13;margin-top:10px}.pola:nth-child(4){grid-column:2/6;margin-top:36px}.pola:nth-child(5){grid-column:7/11;margin-top:70px}
+.pola:nth-child(2) .foto,.pola:nth-child(4) .foto{aspect-ratio:4/3}}
+
+/* Dónde: horarios como una carta y el mapa en un plato */
+.donde{overflow:hidden}.donde .grid2{display:grid;gap:48px;align-items:center}
+@media(min-width:900px){.donde .grid2{grid-template-columns:1fr 1fr}}
+.horas{display:grid;margin-top:26px;max-width:470px}
+.horas div{display:flex;align-items:baseline;gap:12px;padding:10px 0;color:var(--ink2)}
+.horas span{display:flex;flex:1;align-items:baseline;gap:12px}
+.horas span::after{content:"";flex:1;min-width:16px;border-bottom:2px dotted rgba(var(--ink-rgb),.28);transform:translateY(-.3em)}
+.horas b{color:var(--ink);font-weight:600;text-align:right}
+.plato-mapa{position:relative;width:100%;max-width:440px;margin:0 auto;aspect-ratio:1}
+.plato-mapa svg{display:block;width:100%;height:100%;overflow:visible}
+.plato-mapa .pin{position:absolute;left:50%;top:50%;transform:translate(-50%,-100%)}
+.pin i{display:block;width:18px;height:18px;border-radius:50% 50% 50% 0;background:var(--acc);transform:rotate(-45deg);box-shadow:0 8px 20px rgba(var(--acc-rgb),.45)}
+.pin span{position:absolute;left:50%;top:-36px;transform:translateX(-50%);white-space:nowrap;padding:4px 11px;border-radius:999px;background:var(--acc);color:var(--sobre-acc);font-size:.8rem;font-weight:600}
+
+/* Contacto */
+.contacto{text-align:center}
+.contacto h2{margin:0 auto;font-style:italic;font-size:clamp(2.4rem,6vw,5rem)}
+.contacto .ctas{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:30px}
+.contacto .mail{margin-top:18px;color:var(--ink2)}
+footer{padding:30px 20px 100px;text-align:center;color:var(--muted);font-size:.85rem;border-top:1px solid rgba(var(--ink-rgb),.1)}
+.wa-fijo{position:fixed;right:16px;bottom:16px;z-index:45}
+
+/* Los estados iniciales ocultos los fija GSAP (gsap.set), nunca el CSS. Sin JS, o si el CDN falla, la web se ve completa. */
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add('js');</script>
+<a class="skip" href="#carta">Saltar al contenido</a>
+<div class="grano" aria-hidden="true"></div>
+<div class="progreso" aria-hidden="true"></div>
+
+<nav id="nav">
+  <div class="links izq"><a href="#carta">{{NAV_CATALOGO: La carta, El menú, Lo que hacemos…}}</a><a href="#salon">{{NAV_FOTO_GRANDE: El salón, El local…}}</a></div>
+  <a class="marca" href="#inicio">{{NOMBRE}}<small>{{LOCALIDAD_CORTA}}</small></a>
+  <div class="links der"><a href="#donde">Dónde</a><a class="btn btn-acc mag" href="tel:{{TELEFONO_TEL}}">Llamar</a></div>
+</nav>
+
+<header class="hero" id="inicio">
+  <!-- CAPA: la foto que se abre a pantalla completa en escritorio. Es la misma foto del arco (assets/hero-salon.jpg) -->
+  <div class="capa" aria-hidden="true" data-nombre="Foto del hero · assets/hero-salon.jpg"><img src="assets/hero-salon.jpg" alt="" onerror="this.parentElement.classList.add('sin')"><p class="frase">{{FRASE_SOBRE_FOTO: una línea corta y cierta, p. ej. «Cocina de olla, todos los días»}}</p></div>
+  <div class="cont">
+    <div class="arriba"><p class="kicker rv">{{PILL: rubro · barrio, p. ej. «Bodegón · Ramos Mejía»}}</p></div>
+    <!-- La ventana (arco) va dentro del H1 solo como dibujo: aria-hidden, sin texto. Foto: assets/hero-salon.jpg (horizontal, 1200 px o más) -->
+    <h1><span class="l1" data-split>{{TITULAR_LINEA_1: 1 a 3 palabras}}</span><span class="ventana" aria-hidden="true" style="--foto:url(assets/hero-salon.jpg)" data-nombre="Foto del hero · assets/hero-salon.jpg"></span><span class="l2" data-split>{{TITULAR_LINEA_2: 1 a 3 palabras, con <em>palabra clave</em>}}</span></h1>
+    <div class="bajo">
+      <div>
+        <p class="sub rv">{{SUBTITULO}}</p>
+        <div class="ctas rv">
+          <a class="btn btn-wa mag" href="https://wa.me/{{WHATSAPP}}?text={{MENSAJE_PREARMADO_URLENCODED}}">{{CTA_PRINCIPAL: Reservar por WhatsApp, Pedir por WhatsApp}}</a>
+          <a class="btn btn-ghost mag" href="#carta">Ver {{NAV_CATALOGO_MINUSCULA: la carta}} ↓</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <a class="giro mag" href="#carta" aria-label="Ver {{NAV_CATALOGO_MINUSCULA}}">
+    <svg viewBox="0 0 136 136" aria-hidden="true"><defs><path id="circulo" d="M68 68 m-56 0 a56 56 0 1 1 112 0 a56 56 0 1 1 -112 0"/></defs><text><textPath href="#circulo">{{SELLO_TEXTO: unas 30 letras, p. ej. «LA CARTA · RESERVÁ · PEDÍ ·»}}</textPath></text></svg>
+    <span aria-hidden="true">↓</span>
+  </a>
+</header>
+
+<section class="sec manifiesto" id="casa">
+  <div class="wrap">
+    <span class="kicker rv">{{KICKER_MANIFIESTO: La casa, Quiénes somos…}}</span>
+    <p class="grande" data-palabras>{{MANIFIESTO: dos o tres frases del brief sobre qué cocinan y cómo; nada inventado}}</p>
+    <ul class="modos rv">{{MODALIDADES: 2 a 4 <li> reales, p. ej. <li>Salón</li><li>Para llevar</li><li>Delivery</li>}}</ul>
+  </div>
+</section>
+
+<section class="sec carta" id="carta">
+  <div class="wrap">
+    <div class="cabeza"><span class="kicker rv">{{NAV_CATALOGO}}</span><h2 class="rv">{{TITULO_CATALOGO: con <em>una palabra</em> en cursiva}}</h2><p class="lead rv">{{LEAD_CATALOGO}}</p></div>
+    <div class="grupos">
+      <!-- CATEGORÍA: repetí este <div class="grupo"> por cada categoría real (Entradas, Pastas, Postres…). Si no hay categorías, una sola, sin <h3> -->
+      <div class="grupo">
+        <h3 class="cat rv">{{CATEGORIA_1}}</h3>
+        <!-- PLATO / ÍTEM: repetí este bloque por cada ítem REAL del brief o de la web vieja; foto assets/catalogo-0N.jpg (en data-foto y en el img) -->
+        <article class="plato rv" data-foto="assets/catalogo-01.jpg"><div class="foto mini" data-nombre="{{ITEM_1_NOMBRE}}"><img src="assets/catalogo-01.jpg" alt="{{ITEM_1_NOMBRE}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"></div>
+          <div><div class="linea"><h4>{{ITEM_1_NOMBRE}}</h4><i class="guia" aria-hidden="true"></i><span class="precio">{{ITEM_1_PRECIO o Consultar}}</span></div><p>{{ITEM_1_DETALLE}}</p></div>
+          <a class="pedir" href="https://wa.me/{{WHATSAPP}}?text={{MENSAJE_ITEM_1_URLENCODED}}" aria-label="Pedir {{ITEM_1_NOMBRE}} por WhatsApp">Pedir</a></article>
+      </div>
+    </div>
+    <p class="nota rv">{{NOTA_CATALOGO: p. ej. «Precios con IVA. Consultá el menú del día por WhatsApp»; si alguna foto es de banco, decilo acá}}</p>
+  </div>
+  <div class="vista" aria-hidden="true"><img src="assets/catalogo-01.jpg" alt=""><span></span></div>
+</section>
+
+<section class="sec motivos" id="motivos">
+  <div class="wrap grid2">
+    <div>
+      <span class="kicker rv">{{NAV_MOTIVOS: Por qué venir}}</span>
+      <h2 class="rv">{{TITULO_MOTIVOS}}</h2>
+      <p class="lead rv">{{LEAD_MOTIVOS}}</p>
+      <div class="nums">
+        <!-- CONTADORES: solo números reales del brief (si no hay tres, dejá dos o sacá el bloque). El número va igual en data-n y en el texto -->
+        <div class="num rv"><b><span class="cnt" data-n="{{CONTADOR_1_NUMERO}}">{{CONTADOR_1_NUMERO}}</span>{{CONTADOR_1_SUFIJO: vacío, «+», «%»}}</b><small>{{CONTADOR_1_TEXTO}}</small></div>
+        <div class="num rv"><b><span class="cnt" data-n="{{CONTADOR_2_NUMERO}}">{{CONTADOR_2_NUMERO}}</span>{{CONTADOR_2_SUFIJO}}</b><small>{{CONTADOR_2_TEXTO}}</small></div>
+        <div class="num rv"><b><span class="cnt" data-n="{{CONTADOR_3_NUMERO}}">{{CONTADOR_3_NUMERO}}</span>{{CONTADOR_3_SUFIJO}}</b><small>{{CONTADOR_3_TEXTO}}</small></div>
+      </div>
+    </div>
+    <!-- MOMENTO FIRMA: el ticket sale de la impresora al llegar. Reemplazalo si el negocio tiene uno más propio -->
+    <div class="impresora rv" role="group" aria-label="{{TITULO_TICKET}}">
+      <div class="boca" aria-hidden="true"></div>
+      <div class="salida"><div class="ticket">
+        <p class="t-cab"><b>{{NOMBRE}}</b><br>{{DIRECCION_CORTA}}</p>
+        <p class="t-sub">{{TITULO_TICKET: p. ej. «Lo que te llevás»}}</p>
+        <ul>{{MOTIVOS_TICKET: 3 <li><span>1 ×</span> motivo real del brief</li>}}</ul>
+        <p class="t-total"><span>{{TICKET_TOTAL_ETIQUETA: Total}}</span><b>{{TICKET_TOTAL: p. ej. «Te esperamos»}}</b></p>
+        <div class="barras" aria-hidden="true"></div>
+        <p class="t-pie">{{TICKET_PIE: p. ej. el horario corto}}</p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec salon" id="salon">
+  <div class="wrap">
+    <div class="foto grande" data-nombre="Foto del salón · assets/salon.jpg"><img src="assets/salon.jpg" alt="{{ALT_FOTO_GRANDE}}" onerror="this.parentElement.classList.add('sin')"><div class="telon izq" aria-hidden="true"></div><div class="telon der" aria-hidden="true"></div></div>
+    <div class="cartel rv">
+      <span class="kicker">{{NAV_FOTO_GRANDE}}</span>
+      <h2>{{TITULO_FOTO_GRANDE}}</h2>
+      <p class="lead">{{LEAD_FOTO_GRANDE}}</p>
+      <a class="btn btn-ghost mag" href="#donde">Cómo llegar ↓</a>
+    </div>
+  </div>
+</section>
+
+<section class="mesa" id="galeria" aria-label="{{ARIA_GALERIA: p. ej. Fotos del salón y de los platos}}">
+  <div class="wrap"><span class="kicker rv">{{KICKER_GALERIA: La mesa}}</span><h2 class="rv">{{TITULO_GALERIA}}</h2></div>
+  <div class="polas">
+    <figure class="pola" style="--r:-4deg" data-vel="1.2"><div class="foto" data-nombre="Foto 1 · assets/galeria-01.jpg"><img src="assets/galeria-01.jpg" alt="{{ALT_GALERIA_1}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"></div><figcaption>{{PIE_GALERIA_1}}</figcaption></figure>
+    <figure class="pola" style="--r:3deg" data-vel=".6"><div class="foto" data-nombre="Foto 2 · assets/galeria-02.jpg"><img src="assets/galeria-02.jpg" alt="{{ALT_GALERIA_2}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"></div><figcaption>{{PIE_GALERIA_2}}</figcaption></figure>
+    <figure class="pola" style="--r:-2deg" data-vel="1.6"><div class="foto" data-nombre="Foto 3 · assets/galeria-03.jpg"><img src="assets/galeria-03.jpg" alt="{{ALT_GALERIA_3}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"></div><figcaption>{{PIE_GALERIA_3}}</figcaption></figure>
+    <figure class="pola" style="--r:5deg" data-vel=".9"><div class="foto" data-nombre="Foto 4 · assets/galeria-04.jpg"><img src="assets/galeria-04.jpg" alt="{{ALT_GALERIA_4}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"></div><figcaption>{{PIE_GALERIA_4}}</figcaption></figure>
+    <figure class="pola" style="--r:-3deg" data-vel="1.3"><div class="foto" data-nombre="Foto 5 · assets/galeria-05.jpg"><img src="assets/galeria-05.jpg" alt="{{ALT_GALERIA_5}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"></div><figcaption>{{PIE_GALERIA_5}}</figcaption></figure>
+  </div>
+</section>
+
+<section class="sec donde" id="donde">
+  <div class="wrap grid2">
+    <div>
+      <span class="kicker rv">Dónde y cuándo</span>
+      <h2 class="rv">{{DIRECCION_CORTA}}.</h2>
+      <p class="lead rv">{{DIRECCION_COMPLETA_Y_REFERENCIA}} <a href="https://www.google.com/maps/search/?api=1&query={{DIRECCION_URLENCODED}}">Abrir en Google Maps</a></p>
+      <div class="horas rv">{{HORARIOS: una fila por línea, <div><span>Martes a domingo</span><b>12 a 15 y 20 a 24</b></div>}}</div>
+    </div>
+    <div class="plato-mapa rv" aria-hidden="true">
+      <svg viewBox="0 0 400 400">
+        <defs><clipPath id="adentro"><circle cx="200" cy="200" r="148"/></clipPath></defs>
+        <circle cx="200" cy="210" r="192" style="fill:rgba(var(--ink-rgb),.08)"/>
+        <circle cx="200" cy="200" r="192" stroke-width="2" style="fill:var(--papel);stroke:rgba(var(--ink-rgb),.1)"/>
+        <circle cx="200" cy="200" r="166" fill="none" stroke-width="1.5" stroke-dasharray="2 7" style="stroke:rgba(var(--acc-rgb),.45)"/>
+        <g clip-path="url(#adentro)">
+          <rect width="400" height="400" style="fill:var(--bg2)"/>
+          <g fill="none" stroke-width="2" style="stroke:rgba(var(--ink-rgb),.12)"><path class="calle" pathLength="1" stroke-dasharray="1" d="M40 132 H360 M40 276 H360 M128 40 V360 M284 40 V360"/></g>
+          <path class="calle" pathLength="1" stroke-dasharray="1" d="M30 214 L370 190" stroke-width="12" fill="none" stroke-linecap="round" style="stroke:rgba(var(--acc-rgb),.6)"/>
+          <path class="calle" pathLength="1" stroke-dasharray="1" d="M30 104 L370 76" stroke-width="16" fill="none" stroke-linecap="round" style="stroke:rgba(var(--acc2-rgb),.55)"/>
+          <text x="64" y="240" font-size="13" style="fill:rgba(var(--ink-rgb),.6);font-family:var(--f-texto)">{{MAPA_CALLE}}</text>
+          <text x="70" y="130" font-size="13" style="fill:rgba(var(--ink-rgb),.6);font-family:var(--f-texto)">{{MAPA_REFERENCIA: avenida, ruta o plaza cercana}}</text>
+        </g>
+      </svg>
+      <div class="pin"><span>{{NOMBRE}}</span><i></i></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec contacto" id="contacto">
+  <div class="wrap">
+    <span class="kicker rv">Contacto</span>
+    <h2 class="rv">{{TITULO_CONTACTO: una pregunta, p. ej. «¿Te guardamos una mesa?»}}</h2>
+    <div class="ctas rv">
+      <a class="btn btn-wa mag" href="https://wa.me/{{WHATSAPP}}?text={{MENSAJE_PREARMADO_URLENCODED}}">WhatsApp {{WHATSAPP_VISIBLE}}</a>
+      <a class="btn btn-acc mag" href="tel:{{TELEFONO_TEL}}">Teléfono {{TELEFONO_VISIBLE}}</a>
+    </div>
+    <p class="mail rv"><a href="mailto:{{EMAIL}}">{{EMAIL}}</a></p>
+  </div>
+</section>
+
+<a class="wa-fijo btn btn-wa mag" href="https://wa.me/{{WHATSAPP}}?text={{MENSAJE_PREARMADO_URLENCODED}}" aria-label="Escribir por WhatsApp">WhatsApp</a>
+<footer>{{NOMBRE}} · {{DIRECCION_CORTA}} · {{QUE_HACE_CORTO}} · © {{AÑO}}</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  if(!window.gsap||!window.ScrollTrigger){document.documentElement.classList.remove('js');return;}
+  gsap.registerPlugin(ScrollTrigger);
+  gsap.ticker.lagSmoothing(0); /* para que las animaciones avancen también en renders headless */
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.classList.remove('js');return;}
+  var hover=matchMedia('(hover:hover)').matches, q=function(s,c){return (c||document).querySelector(s)}, qa=function(s,c){return [].slice.call((c||document).querySelectorAll(s))};
+
+  /* Parte un texto en palabras (.w) y, si se pide, en letras (.c). Sin plugins */
+  function partir(el,letras){
+    [].slice.call(el.childNodes).forEach(function(n){
+      if(n.nodeType===3){var f=document.createDocumentFragment();
+        n.textContent.split(/(\s+)/).forEach(function(p){if(!p)return;if(/^\s+$/.test(p)){f.appendChild(document.createTextNode(' '));return;}
+          var w=document.createElement('span');w.className='w';
+          if(letras)p.split('').forEach(function(ch){var c=document.createElement('span');c.className='c';c.textContent=ch;w.appendChild(c);});else w.textContent=p;
+          f.appendChild(w);});
+        n.parentNode.replaceChild(f,n);
+      }else if(n.nodeType===1&&n.tagName!=='BR'&&!n.classList.contains('ventana'))partir(n,letras);
+    });
+  }
+
+  /* Estados iniciales (solo con GSAP cargado): así, sin JS la web se ve completa */
+  var h1=q('.hero h1');
+  h1.setAttribute('aria-label',qa('[data-split]',h1).map(function(l){return l.textContent.trim()}).join(' ').replace(/\s+/g,' '));
+  qa('[data-split]',h1).forEach(function(l){l.setAttribute('aria-hidden','true');partir(l,true);});
+  gsap.set('.rv',{opacity:0,y:26});
+  gsap.set('.hero .c',{opacity:0,yPercent:55,rotate:7});
+
+  /* Nav compacta y barra de progreso */
+  ScrollTrigger.create({start:60,onUpdate:function(s){q('#nav').classList.toggle('compacta',s.scroll()>60)}});
+  gsap.to('.progreso',{scaleX:1,ease:'none',scrollTrigger:{start:0,end:'max',scrub:.3}});
+
+  /* Hero: letras que suben escalonadas */
+  var tl=gsap.timeline({defaults:{ease:'power3.out'}});
+  tl.to('.hero .c',{opacity:1,yPercent:0,rotate:0,duration:1,stagger:.028},.1)
+    .to('.hero .rv',{opacity:1,y:0,duration:.9,stagger:.12},.7);
+
+  var mm=gsap.matchMedia(), hero=q('.hero'), ven=q('.hero .ventana'), capa=q('.hero .capa');
+  /* Escritorio: la ventana se abre a pantalla completa con la sección fija */
+  mm.add('(min-width: 900px)',function(){
+    function recorte(){var h=hero.getBoundingClientRect(),r=ven.getBoundingClientRect(),rx=r.width/2,ry=r.height*.4;
+      return 'inset('+(r.top-h.top)+'px '+(h.right-r.right)+'px '+(h.bottom-r.bottom)+'px '+(r.left-h.left)+'px round '+rx+'px '+rx+'px 18px 18px / '+ry+'px '+ry+'px 18px 18px)';}
+    /* Con foto, la capa recorta el arco desde el principio. Sin foto, se ve el arco con su panel hasta que empezás a bajar */
+    var avance=0;function cambiar(){var on=!capa.classList.contains('sin')||avance>.002;capa.style.visibility=on?'visible':'hidden';ven.style.visibility=on?'hidden':'visible';}
+    gsap.set(capa,{display:'block'});cambiar();q('img',capa).addEventListener('error',function(){setTimeout(cambiar)});
+    tl.fromTo(capa,{opacity:0},{opacity:1,duration:1.2},.2);
+    var tp=gsap.timeline({scrollTrigger:{trigger:hero,start:'top top',end:'+=130%',pin:true,scrub:.8,invalidateOnRefresh:true,onUpdate:function(s){avance=s.progress;cambiar();}}});
+    tp.fromTo(capa,{clipPath:recorte},{clipPath:'inset(0px 0px 0px 0px round 0px 0px 0px 0px / 0px 0px 0px 0px)',ease:'power2.inOut',duration:1},0)
+      .fromTo(q('img',capa),{scale:1},{scale:1.08,ease:'none',duration:1},0)
+      .to('.hero h1 .l1',{xPercent:-40,opacity:0,ease:'power2.in',duration:.6},0)
+      .to('.hero h1 .l2',{xPercent:40,opacity:0,ease:'power2.in',duration:.6},0)
+      .to('.hero .arriba, .hero .bajo',{opacity:0,y:-30,ease:'power2.in',duration:.4},0)
+      .to('.hero .giro',{opacity:0,scale:.6,ease:'power2.in',duration:.4},0)
+      .fromTo('.capa .frase',{opacity:0,y:40},{opacity:1,y:0,duration:.3},.72);
+  });
+  /* El arco se revela de abajo hacia arriba al cargar; en el celular, además, la foto respira con el scroll */
+  tl.fromTo(ven,{clipPath:'inset(100% 0% 0% 0%)'},{clipPath:'inset(0% 0% 0% 0%)',duration:1.3,ease:'expo.out'},.2);
+  mm.add('(max-width: 899px)',function(){
+    gsap.fromTo(ven,{'--z':1.18},{'--z':1,ease:'none',scrollTrigger:{trigger:hero,start:'top top',end:'bottom top',scrub:true}});
+  });
+
+  /* Sello giratorio que acelera con la velocidad del scroll */
+  var giro=q('.giro svg');
+  if(giro){var tg=gsap.to(giro,{rotation:360,duration:16,ease:'none',repeat:-1}),vel=0;
+    ScrollTrigger.create({start:0,end:'max',onUpdate:function(s){vel=Math.min(Math.abs(s.getVelocity())/350,6)}});
+    gsap.ticker.add(function(){vel*=.94;tg.timeScale(1+vel)});}
+
+  /* Reveals: cada bloque aparece cuando llega */
+  ScrollTrigger.batch('.sec .rv, .mesa .rv',{start:'top 88%',onEnter:function(b){gsap.to(b,{opacity:1,y:0,duration:.9,ease:'power3.out',stagger:.09,overwrite:true})}});
+
+  /* Manifiesto: se enciende palabra por palabra */
+  qa('[data-palabras]').forEach(function(p){partir(p,false);
+    gsap.fromTo(qa('.w',p),{opacity:.14},{opacity:1,stagger:.1,ease:'none',scrollTrigger:{trigger:p,start:'top 78%',end:'bottom 42%',scrub:true}});});
+
+  /* La carta: la foto del plato sigue al mouse (quickTo, no gsap.to en mousemove) */
+  var vista=q('.carta .vista');
+  if(vista&&hover&&matchMedia('(min-width: 900px)').matches){
+    var vi=q('img',vista),vt=q('span',vista);
+    gsap.set(vista,{display:'block',autoAlpha:0,scale:.6,xPercent:-50,yPercent:-50});
+    var vx=gsap.quickTo(vista,'x',{duration:.55,ease:'power3'}),vy=gsap.quickTo(vista,'y',{duration:.55,ease:'power3'});
+    vi.addEventListener('error',function(){vista.classList.add('sin')});
+    qa('.plato').forEach(function(p){
+      p.addEventListener('mouseenter',function(){vista.classList.remove('sin');vt.textContent=q('h4',p).textContent;
+        if(vi.getAttribute('src')!==p.dataset.foto)vi.setAttribute('src',p.dataset.foto);
+        gsap.to(vista,{autoAlpha:1,scale:1,duration:.45,ease:'power3.out',overwrite:'auto'});});
+      p.addEventListener('mouseleave',function(){gsap.to(vista,{autoAlpha:0,scale:.6,duration:.3,overwrite:'auto'})});
+    });
+    q('.carta').addEventListener('mousemove',function(e){vx(e.clientX>innerWidth/2?e.clientX-190:e.clientX+190);vy(e.clientY)});
+  }
+
+  /* Contadores reales */
+  qa('.cnt').forEach(function(el){var n=parseInt(el.dataset.n,10);if(isNaN(n))return;
+    ScrollTrigger.create({trigger:el,start:'top 88%',once:true,onEnter:function(){gsap.fromTo(el,{innerText:0},{innerText:n,duration:1.4,ease:'power2.out',snap:{innerText:1}})}});});
+
+  /* Ticket: sale de la impresora a los saltos y se mece */
+  var tk=q('.ticket');
+  if(tk){gsap.set(tk,{yPercent:-102});
+    ScrollTrigger.create({trigger:'.impresora',start:'top 72%',once:true,onEnter:function(){
+      gsap.to(tk,{yPercent:0,duration:2,ease:'steps(18)',delay:.3});
+      gsap.fromTo(tk,{rotation:0},{rotation:1.4,transformOrigin:'50% 0',duration:.35,yoyo:true,repeat:3,ease:'sine.inOut',delay:2.3});}});}
+
+  /* El salón: se abre el telón y la foto se acerca */
+  qa('.salon .foto').forEach(function(f){var t=qa('.telon',f);gsap.set(t,{scaleX:1});
+    gsap.timeline({scrollTrigger:{trigger:f,start:'top 85%',end:'top 20%',scrub:.6}})
+      .to(t,{scaleX:0,ease:'power2.inOut'},0).fromTo(q('img',f),{scale:1.25},{scale:1,ease:'none'},0);});
+
+  /* La mesa: las polaroids caen sobre el mantel y flotan a distinta velocidad */
+  mm.add('(min-width: 900px)',function(){
+    qa('.pola').forEach(function(p,i){
+      gsap.from(p,{y:-200,rotation:'+='+(i%2?18:-18),opacity:0,duration:1.1,ease:'back.out(1.3)',delay:i*.12,scrollTrigger:{trigger:'.polas',start:'top 75%',once:true}});
+      gsap.to(p,{yPercent:-(parseFloat(p.dataset.vel)||1)*14,ease:'none',scrollTrigger:{trigger:'.polas',start:'top bottom',end:'bottom top',scrub:true}});
+    });
+  });
+  mm.add('(max-width: 899px)',function(){gsap.from('.pola',{opacity:0,y:40,stagger:.1,duration:.8,scrollTrigger:{trigger:'.polas',start:'top 85%'}})});
+
+  /* El plato: las calles se dibujan, el pin cae y el plato gira apenas */
+  var pm=q('.plato-mapa');
+  if(pm){gsap.fromTo(qa('.calle',pm),{strokeDashoffset:1},{strokeDashoffset:0,duration:1.6,stagger:.12,ease:'power2.inOut',scrollTrigger:{trigger:pm,start:'top 75%'}});
+    gsap.from(q('.pin',pm),{y:-50,opacity:0,duration:.9,ease:'bounce.out',delay:1,scrollTrigger:{trigger:pm,start:'top 75%'}});
+    gsap.fromTo(q('svg',pm),{rotation:-8},{rotation:8,ease:'none',scrollTrigger:{trigger:pm,start:'top bottom',end:'bottom top',scrub:true}});}
+
+  /* Botones magnéticos con quickTo (no gsap.to en mousemove) */
+  if(hover){qa('.mag').forEach(function(b){
+    var qx=gsap.quickTo(b,'x',{duration:.35,ease:'power3'}),qy=gsap.quickTo(b,'y',{duration:.35,ease:'power3'});
+    b.addEventListener('mousemove',function(e){var r=b.getBoundingClientRect();qx((e.clientX-r.left-r.width/2)*.3);qy((e.clientY-r.top-r.height/2)*.4)});
+    b.addEventListener('mouseleave',function(){gsap.to(b,{x:0,y:0,duration:.6,ease:'elastic.out(1,.4)'})});
+  });}
+})();
+</script>
+</body>
+</html>

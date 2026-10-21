@@ -1,6 +1,6 @@
 # Prompt abierto · la web nueva con scrolling deslumbrante (el principal)
 
-Pegalo entero en Claude (Claude Code es lo ideal: genera el archivo y lo abre), y debajo el `brief.md` y la `auditoria.md`. Receta: HTML único + GSAP 3 con ScrollTrigger por CDN + Google Fonts. Es el mismo stack que usan las webs premium con scroll «tipo Apple».
+Pegalo entero en Claude (Claude Code es lo ideal: genera el archivo y lo abre), y debajo el `brief.md` y la `auditoria.md`. Con Claude Code el kit no parte de cero: usa uno de los cinco esqueletos de `plantilla/`, y este prompt es la especificación que manda en todo lo demás. Receta: HTML único + GSAP 3 con ScrollTrigger por CDN + Google Fonts. Es el mismo stack que usan las webs premium con scroll «tipo Apple».
 
 ```
 Vas a crear la página web nueva de un negocio chico: una sola página (index.html) que deslumbre al hacer scroll y que, aun así, cargue rápido, se lea en el celular y le diga a Google dónde está el negocio.

@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<!--
+ESQUELETO «PULSO» · rehacer-web · enérgico y de alto contraste, para cuerpo y estilo (gimnasio, crossfit, barbería, peluquería,
+estética, tatuajes, danza, deportes)
+Mecánica YA HECHA y probada con el gate visual: GSAP + ScrollTrigger. Hero de tipografía condensada gigante que cae letra por letra
+y cuyas líneas se separan al bajar, foto en duotono inclinada con sticker giratorio; cintas cruzadas que se tuercen con la velocidad
+del scroll; planes que se apilan (sección fija); bloque que cambia de color al entrar, con razones y números que se llenan;
+antes/después deslizable (opcional); horarios en un tablero de aeropuerto que se reacomoda (momento firma); galería en columnas a
+distinta velocidad; cursor propio y botones magnéticos; barra de progreso; nav sin blur; degradación sin JS; reduced-motion.
+Imágenes swap-ready (assets/hero-salon.jpg, salon.jpg, galeria-01..05.jpg, catalogo-01..NN.jpg, y antes.jpg / despues.jpg si hay antes y después);
+si faltan, el marco muestra un panel.
+Tu trabajo: completar los slots {{...}} con el brief, repetir el plan por cada ítem REAL, adaptar nombres de sección al rubro y
+sacar lo que no aplique (el antes y después es opcional).
+Reglas: no inventes datos; lo que falte queda como [PLACEHOLDER] visible (validá con --borrador); no agregues librerías;
+no backdrop-filter en la nav; no gsap.to dentro de mousemove; estados iniciales ocultos solo en gsap.set.
+Al terminar: python3 rehacer-web/scripts/validar_sitio.py index.html y el gate de references/gate-visual.md.
+-->
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITULO_SEO: nombre + qué hace + ciudad, 10 a 70 caracteres}}</title>
+<meta name="description" content="{{DESCRIPCION_SEO: una frase de 50 a 170 caracteres con qué hace, para quién y dónde}}">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- FUENTES: par por defecto de «Pulso». Otros pares probados en COMO-USAR-EL-ESQUELETO.md; si lo cambiás, cambiá también --f-display y --f-texto -->
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"{{TIPO_SCHEMA: ExerciseGym, HairSalon, BeautySalon, DaySpa, TattooParlor, SportsActivityLocation}}","name":"{{NOMBRE}}","url":"{{URL}}","telephone":"{{TELEFONO_INTERNACIONAL}}","email":"{{EMAIL}}","address":{"@type":"PostalAddress","streetAddress":"{{CALLE_Y_NUMERO}}","addressLocality":"{{LOCALIDAD}}","addressRegion":"{{PROVINCIA}}","postalCode":"{{CP}}","addressCountry":"AR"},"openingHours":["{{HORARIO_SCHEMA_1}}","{{HORARIO_SCHEMA_2}}"]}
+</script>
+<style>
+/* ===== Sistema cerrado: negro cálido, tinta hueso, UN acento eléctrico del negocio que también es fondo, secundario con cuentagotas ===== */
+:root{--bg:{{FONDO: casi negro cálido, hex (p. ej. #111110)}};--bg-rgb:{{FONDO_RGB: el mismo color en r,g,b}};--bg2:{{FONDO2: un punto más claro que el fondo}};--ink:#f2f1ec;--ink-rgb:242,241,236;--ink2:#b9b7ae;--muted:#7d7b73;--acc:{{ACENTO: el color eléctrico del negocio, hex}};--acc-rgb:{{ACENTO_RGB: r,g,b}};--acc-claro:{{ACENTO_CLARO: el acento más claro}};--sobre-acc:{{TEXTO_SOBRE_ACENTO: casi negro}};--acc2:{{SECUNDARIO: hex}};--acc2-rgb:{{SECUNDARIO_RGB: r,g,b}};--wa:#25d366;--r:26px;--r2:14px;--f-display:"Anton",Impact,"Arial Narrow",sans-serif;--f-texto:"Archivo",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-texto);font-size:17px;line-height:1.55;overflow-x:hidden;-webkit-tap-highlight-color:transparent}
+::selection{background:var(--acc);color:var(--sobre-acc)}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;text-transform:uppercase;letter-spacing:.005em;line-height:.9;margin:0}
+a{color:inherit}
+.skip{position:absolute;left:-999px;top:8px;background:var(--acc);color:var(--sobre-acc);padding:8px 12px;border-radius:8px;z-index:99}.skip:focus{left:8px}
+:focus-visible{outline:3px solid var(--acc);outline-offset:3px}
+section{scroll-margin-top:76px}
+.progreso{position:fixed;left:0;top:0;height:4px;width:100%;transform:scaleX(0);transform-origin:0 50%;background:var(--acc);z-index:50}
+.cursor{display:none;position:fixed;left:0;top:0;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:var(--acc);pointer-events:none;z-index:70;mix-blend-mode:difference}
+
+/* ===== Nav ===== */
+nav{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 20px;transition:background .3s,padding .3s}
+nav.compacta{background:rgba(var(--bg-rgb),.97);padding:10px 20px;box-shadow:0 1px 0 rgba(var(--ink-rgb),.1)}
+nav .marca{font-family:var(--f-display);font-size:1.55rem;line-height:1;text-transform:uppercase;text-decoration:none}
+nav .marca small{display:block;font-family:var(--f-texto);font-size:.68rem;font-weight:600;letter-spacing:.16em;color:var(--ink2);margin-top:3px}
+nav .links{display:none;gap:24px;font-weight:600;font-size:.9rem;letter-spacing:.06em;text-transform:uppercase}nav .links a{text-decoration:none}nav .links a:hover{color:var(--acc)}
+@media(min-width:960px){nav .links{display:flex}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:999px;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase;will-change:transform}
+.btn-acc{background:var(--acc);color:var(--sobre-acc)}
+.btn-wa{background:var(--wa);color:#07210f}
+.btn-ghost{border:2px solid rgba(var(--ink-rgb),.35)}.btn-ghost:hover{border-color:var(--acc);color:var(--acc)}
+
+/* ===== Fotos en duotono y paneles ===== */
+.foto{position:relative;overflow:hidden;border-radius:var(--r);isolation:isolate;background:repeating-linear-gradient(-45deg,rgba(var(--acc-rgb),.13) 0 14px,transparent 14px 28px),var(--bg2)}
+.foto img{display:block;width:100%;height:100%;object-fit:cover;will-change:transform}
+.duo img{filter:grayscale(1) contrast(1.15) brightness(.95);transition:filter .6s}
+.duo::after{content:"";position:absolute;inset:0;background:var(--acc);mix-blend-mode:multiply;opacity:.92;transition:opacity .6s;pointer-events:none}
+.duo:hover img{filter:none}.duo:hover::after{opacity:0}
+.foto.sin img,.foto.sin::after{display:none}
+.foto.sin::before{content:attr(data-nombre);position:absolute;inset:0;display:grid;place-items:center;padding:18px;text-align:center;font-family:var(--f-display);font-size:1.15rem;line-height:1.1;text-transform:uppercase;color:rgba(var(--ink-rgb),.4)}
+.foto .pie{position:absolute;left:14px;bottom:14px;z-index:2;padding:5px 10px;background:var(--bg);color:var(--ink);font-size:.74rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+
+/* ===== Hero: tipografía gigante, foto inclinada y sticker ===== */
+.hero{min-height:100svh;position:relative;display:grid;align-content:center;gap:34px;padding:108px 20px 56px;overflow:hidden}
+.hero .cont{max-width:1280px;width:100%;margin:0 auto;position:relative;z-index:2}
+.kicker{display:inline-block;margin:0 0 16px;font-weight:700;font-size:.82rem;letter-spacing:.18em;text-transform:uppercase;color:var(--acc)}
+.hero h1{font-size:clamp(3.4rem,13.5vw,13rem);line-height:.86;hyphens:auto}
+@media(min-width:900px){.hero h1{font-size:clamp(3.4rem,11.5vw,11rem);max-width:calc(100% - 30vw)}}
+.hero h1 .ln{display:block}
+.hero h1 .hueca{color:transparent;-webkit-text-stroke:2px var(--ink)}
+.hero h1 em{font-style:normal;color:var(--acc)}
+.hero .c{display:inline-block}.hero .w{display:inline-block;white-space:nowrap}
+.hero .bajo{display:grid;gap:22px;margin-top:30px;max-width:620px}
+.hero .sub{margin:0;color:var(--ink2);font-size:1.12rem;max-width:44ch}
+.hero .ctas{display:flex;flex-wrap:wrap;gap:12px}
+.tarjeta{position:relative;width:min(72vw,340px);margin:0 auto;transform:rotate(5deg);z-index:1}
+.tarjeta .foto{aspect-ratio:3/4;border-radius:18px;box-shadow:0 40px 80px rgba(0,0,0,.45)}
+@media(min-width:900px){.tarjeta{position:absolute;right:5vw;top:clamp(110px,17vh,190px);width:min(22vw,340px);margin:0}}
+.sticker{position:absolute;left:-46px;bottom:-40px;width:118px;height:118px;z-index:3;border-radius:50%;background:var(--acc2);color:var(--sobre-acc);display:grid;place-items:center}
+.sticker svg{position:absolute;inset:0;width:100%;height:100%}
+.sticker text{font-family:var(--f-texto);font-weight:700;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;fill:var(--sobre-acc)}
+.sticker b{font-family:var(--f-display);font-weight:400;font-size:1.25rem;text-transform:uppercase;line-height:1;text-align:center;max-width:64px}
+
+/* ===== Cintas cruzadas ===== */
+.cintas{position:relative;height:clamp(170px,24vw,300px);overflow:hidden}
+.cinta{position:absolute;left:-6%;right:-6%;top:50%;padding:12px 0;white-space:nowrap;overflow:hidden;font-family:var(--f-display);font-size:clamp(1.9rem,4.6vw,3.8rem);line-height:1.05;text-transform:uppercase}
+.cinta.c1{background:var(--acc);color:var(--sobre-acc);transform:translateY(-50%) rotate(-4deg);z-index:2}
+.cinta.c2{background:var(--ink);color:var(--bg);transform:translateY(-50%) rotate(3deg)}
+.cinta .track{display:inline-block;will-change:transform}
+.cinta span{display:inline-block;padding:0 22px}.cinta span::after{content:"✱";margin-left:44px}
+
+/* ===== Secciones ===== */
+.sec{padding:110px 20px;position:relative}
+.wrap{max-width:1180px;margin:0 auto}
+h2{font-size:clamp(2.6rem,7vw,6rem);max-width:16ch}
+h2 em{font-style:normal;color:var(--acc)}
+.lead{color:var(--ink2);font-size:1.1rem;max-width:52ch;margin:20px 0 0}
+
+/* Planes que se apilan */
+.pila{max-width:1180px;margin:48px auto 0;padding:0 0 30px;counter-reset:plan}
+.plan{position:sticky;top:calc(88px + var(--i,0) * 16px);display:grid;margin-bottom:28px;border-radius:var(--r);overflow:hidden;background:var(--bg2);border:1px solid rgba(var(--ink-rgb),.1);transform-origin:50% 0}
+.plan:nth-child(2){--i:1}.plan:nth-child(3){--i:2}.plan:nth-child(4){--i:3}.plan:nth-child(5){--i:4}.plan:nth-child(6){--i:5}
+.plan:nth-child(even){background:var(--acc);color:var(--sobre-acc);border-color:transparent}
+.plan:nth-child(even) .btn-acc{background:var(--sobre-acc);color:var(--acc)}
+.plan .foto{border-radius:0;aspect-ratio:16/10}
+.plan .texto{padding:26px 24px 28px;display:flex;flex-direction:column;gap:12px}
+.plan .n::before{counter-increment:plan;content:counter(plan,decimal-leading-zero);font-family:var(--f-display);font-size:1.3rem;opacity:.55}
+.plan h3{font-size:clamp(2.2rem,5vw,4.2rem)}
+.plan p{margin:0;opacity:.82;max-width:44ch}
+.plan .pie2{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;margin-top:auto;padding-top:14px}
+.plan .precio{font-family:var(--f-display);font-weight:400;font-size:1.9rem;line-height:1}
+.velo{position:absolute;inset:0;background:var(--bg);opacity:0;pointer-events:none;z-index:3}
+@media(min-width:900px){.plan{grid-template-columns:1fr 1.1fr;min-height:440px}.plan .foto{aspect-ratio:auto}.plan .texto{padding:40px}}
+
+/* Bloque que cambia de color: razones y números que se llenan */
+.flip{background:var(--acc);color:var(--sobre-acc)}
+.flip .kicker{color:inherit;opacity:.75}.flip h2 em{color:inherit;text-decoration:underline;text-decoration-thickness:.1em;text-underline-offset:.1em}
+.final h2 em{font-style:normal;color:transparent;-webkit-text-stroke:2px var(--sobre-acc)}
+.razones{list-style:none;padding:0;margin:44px 0 0;counter-reset:r}
+.razones li{display:flex;align-items:baseline;gap:22px;padding:20px 0;border-top:2px solid currentColor;font-family:var(--f-display);font-size:clamp(1.8rem,4.6vw,3.6rem);line-height:1;text-transform:uppercase}
+.razones li::before{counter-increment:r;content:"0" counter(r);flex:0 0 auto;font-size:.42em;opacity:.65}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:56px}
+.num b{display:block;font-family:var(--f-display);font-weight:400;font-size:clamp(3.4rem,10vw,8.5rem);line-height:.9;color:transparent;-webkit-text-stroke:2px var(--sobre-acc);background:linear-gradient(to top,var(--sobre-acc) 50%,transparent 50%) 0 100%/100% 200% no-repeat;-webkit-background-clip:text;background-clip:text}
+.num small{display:block;margin-top:10px;font-weight:600;font-size:.92rem;letter-spacing:.04em;text-transform:uppercase}
+
+/* Antes y después */
+.comparar{position:relative;aspect-ratio:4/5;margin-top:40px;border-radius:var(--r);overflow:hidden;--pos:50%}
+@media(min-width:800px){.comparar{aspect-ratio:16/9}}
+.comparar .foto{position:absolute;inset:0;border-radius:0}
+.comparar .antes{clip-path:inset(0 calc(100% - var(--pos)) 0 0)}
+.comparar .et{position:absolute;top:16px;z-index:3;padding:6px 12px;background:var(--bg);font-weight:700;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase}
+.comparar .et.a{left:16px}.comparar .et.d{right:16px;background:var(--acc);color:var(--sobre-acc)}
+.manija{position:absolute;top:0;bottom:0;left:var(--pos);width:4px;margin-left:-2px;background:var(--acc);z-index:3;pointer-events:none}
+.manija::after{content:"↔";position:absolute;top:50%;left:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--acc);color:var(--sobre-acc);display:grid;place-items:center;font-weight:700;font-size:1.2rem}
+.comparar input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:ew-resize;z-index:4}
+html:not(.js) .comparar input{display:none}
+.comparar .antes.sin::before{place-items:center start;padding-left:9%}.comparar .despues.sin::before{place-items:center end;padding-right:9%}
+
+/* Tablero de horarios (momento firma) */
+.horas{display:grid;gap:6px;margin-top:40px;padding:10px;border-radius:18px;background:#0a0a09;box-shadow:inset 0 0 0 1px rgba(var(--ink-rgb),.08)}
+.horas div{position:relative;display:flex;justify-content:space-between;gap:16px;padding:16px 18px;border-radius:10px;background:#1b1b19;font-family:var(--mono);font-size:clamp(.92rem,2.2vw,1.25rem);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.horas div::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.65)}
+.horas b{color:var(--acc);font-weight:600;text-align:right}
+.tablero-sec .nota{color:var(--ink2);margin:18px 0 0}
+
+/* Galería en columnas a distinta velocidad */
+.galeria{padding:40px 20px 120px;overflow:hidden}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:1280px;margin:0 auto}
+.col{display:contents}
+.cols .foto{aspect-ratio:3/4}
+@media(min-width:900px){.cols{grid-template-columns:repeat(3,1fr);gap:18px;align-items:start}.col{display:grid;gap:18px}.col:nth-child(2){margin-top:120px}.col:nth-child(1) .foto:nth-child(2),.col:nth-child(2) .foto:nth-child(1){aspect-ratio:4/3}}
+
+/* Dónde */
+.donde .dir{font-size:clamp(2.8rem,9vw,8rem);max-width:none}
+.donde .fila{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px;margin-top:24px}
+.donde .fila .lead{margin:0}
+.donde .vistas{display:grid;gap:16px;margin-top:40px}
+@media(min-width:900px){.donde .vistas{grid-template-columns:.8fr 1.2fr}}
+.donde .vistas .foto{aspect-ratio:4/3}
+.mapa{position:relative;border-radius:var(--r);overflow:hidden;background:var(--bg2);aspect-ratio:4/3;width:100%}
+@media(min-width:900px){.mapa{aspect-ratio:auto;min-height:100%}}
+.mapa svg{position:absolute;inset:0;width:100%;height:100%}
+.mapa .pin{position:absolute;left:58%;top:52%;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 0 rgba(var(--acc-rgb),.6);animation:late 1.8s ease-out infinite}
+.mapa .pin span{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);white-space:nowrap;padding:6px 12px;background:var(--acc);color:var(--sobre-acc);font-family:var(--f-display);font-size:1.1rem;text-transform:uppercase;line-height:1}
+@keyframes late{to{box-shadow:0 0 0 26px rgba(var(--acc-rgb),0)}}
+
+/* Final: el contacto en el bloque del acento */
+.final{background:var(--acc);color:var(--sobre-acc);padding:0 0 110px;overflow:hidden}
+.cinta-final{padding:26px 0;white-space:nowrap;overflow:hidden;font-family:var(--f-display);font-size:clamp(3.4rem,12vw,10rem);line-height:1;text-transform:uppercase;color:transparent;-webkit-text-stroke:2px var(--sobre-acc)}
+.cinta-final .track{display:inline-block;will-change:transform}.cinta-final span{display:inline-block;padding-right:.5em}
+.final .wrap{padding:30px 20px 0}
+.final h2{max-width:14ch}
+.final .acciones{display:flex;flex-wrap:wrap;align-items:center;gap:28px 44px;margin-top:40px}
+.redondo{display:grid;place-items:center;width:170px;height:170px;border-radius:50%;background:var(--sobre-acc);color:var(--acc);font-family:var(--f-display);font-size:1.5rem;text-transform:uppercase;text-decoration:none;will-change:transform}
+.final .datos-c{display:grid;gap:8px;font-weight:700;font-size:1.15rem}
+.final .datos-c a{text-decoration:none;border-bottom:2px solid currentColor;justify-self:start}
+footer{padding:28px 20px 100px;text-align:center;color:var(--muted);font-size:.85rem}
+.wa-fijo{position:fixed;right:16px;bottom:16px;z-index:45}
+@media(prefers-reduced-motion:reduce){.mapa .pin{animation:none}}
+
+/* Los estados iniciales ocultos los fija GSAP (gsap.set), nunca el CSS. Sin JS, o si el CDN falla, la web se ve completa. */
+</style>
+</head>
+<body>
+<script>document.documentElement.classList.add('js');</script>
+<a class="skip" href="#planes">Saltar al contenido</a>
+<div class="progreso" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"></div>
+
+<nav id="nav">
+  <a class="marca" href="#inicio">{{NOMBRE}}<small>{{LOCALIDAD_CORTA}}</small></a>
+  <div class="links"><a href="#planes">{{NAV_CATALOGO: Planes, Servicios, Clases}}</a><a href="#horarios">Horarios</a><a href="#donde">Dónde</a></div>
+  <a class="btn btn-acc mag" href="tel:{{TELEFONO_TEL}}">Llamar</a>
+</nav>
+
+<header class="hero" id="inicio">
+  <div class="cont">
+    <p class="kicker rv">{{PILL: rubro · barrio, p. ej. «Gimnasio · Lanús Oeste»}}</p>
+    <!-- TITULAR: tres líneas cortas (una o dos palabras cada una); la del medio va calada -->
+    <h1><span class="ln" data-dir="-1">{{TITULAR_LINEA_1}}</span><span class="ln hueca" data-dir="1">{{TITULAR_LINEA_2}}</span><span class="ln" data-dir="-1">{{TITULAR_LINEA_3 con <em>palabra clave</em>}}</span></h1>
+    <div class="bajo">
+      <p class="sub rv">{{SUBTITULO}}</p>
+      <div class="ctas rv">
+        <a class="btn btn-wa mag" href="https://wa.me/{{WHATSAPP}}?text={{MENSAJE_PREARMADO_URLENCODED}}">{{CTA_PRINCIPAL: Quiero empezar, Pedir turno}}</a>
+        <a class="btn btn-ghost mag" href="#planes">Ver {{NAV_CATALOGO_MINUSCULA: planes}}</a>
+      </div>
+    </div>
+  </div>
+  <div class="tarjeta">
+    <div class="foto duo" data-nombre="Foto del hero · assets/hero-salon.jpg"><img src="assets/hero-salon.jpg" alt="{{ALT_HERO}}" onerror="this.parentElement.classList.add('sin')"></div>
+    <div class="sticker" aria-hidden="true"><svg viewBox="0 0 118 118"><defs><path id="ronda" d="M59 59 m-46 0 a46 46 0 1 1 92 0 a46 46 0 1 1 -92 0"/></defs><text><textPath href="#ronda">{{STICKER_TEXTO: unas 28 letras, p. ej. «BLOQUE GYM · LANÚS OESTE ·»}}</textPath></text></svg><b>{{STICKER_CENTRO: una o dos palabras}}</b></div>
+  </div>
+</header>
+
+<div class="cintas" aria-hidden="true">
+  <div class="cinta c1"><div class="track">{{CINTA_1: 4 a 6 <span> con servicios reales, p. ej. <span>Musculación</span><span>Funcional</span>}}</div></div>
+  <div class="cinta c2"><div class="track">{{CINTA_2: 4 a 6 <span> con otros datos reales: barrio, horario, clases}}</div></div>
+</div>
+
+<section class="sec planes" id="planes">
+  <div class="wrap"><span class="kicker rv">{{NAV_CATALOGO}}</span><h2 class="rv">{{TITULO_CATALOGO: con <em>una palabra</em> en el acento}}</h2><p class="lead rv">{{LEAD_CATALOGO}}</p></div>
+  <div class="pila">
+    <!-- PLAN / SERVICIO: repetí este bloque por cada ítem REAL del brief (planes, servicios, cortes, tratamientos); foto assets/catalogo-0N.jpg. El número sale solo -->
+    <article class="plan"><div class="foto duo" data-nombre="Foto · assets/catalogo-01.jpg"><img src="assets/catalogo-01.jpg" alt="{{ITEM_1_NOMBRE}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"></div>
+      <div class="texto"><span class="n"></span><h3>{{ITEM_1_NOMBRE}}</h3><p>{{ITEM_1_DETALLE}}</p><div class="pie2"><b class="precio">{{ITEM_1_PRECIO o Consultar}}</b><a class="btn btn-acc" href="https://wa.me/{{WHATSAPP}}?text={{MENSAJE_ITEM_1_URLENCODED}}">{{ITEM_1_BOTON: Lo quiero}}</a></div></div><div class="velo" aria-hidden="true"></div></article>
+  </div>
+</section>
+
+<section class="sec flip" id="motivos">
+  <div class="wrap">
+    <span class="kicker">{{NAV_MOTIVOS: Por qué acá}}</span>
+    <h2 class="rv">{{TITULO_MOTIVOS}}</h2>
+    <ol class="razones">{{MOTIVOS: 3 <li> reales del brief, de 2 a 5 palabras}}</ol>
+    <div class="nums">
+      <!-- CONTADORES: solo números reales del brief (si no hay tres, dejá dos o sacá el bloque). El número va igual en data-n y en el texto -->
+      <div class="num rv"><b><span class="cnt" data-n="{{CONTADOR_1_NUMERO}}">{{CONTADOR_1_NUMERO}}</span>{{CONTADOR_1_SUFIJO: vacío, «+», «%»}}</b><small>{{CONTADOR_1_TEXTO}}</small></div>
+      <div class="num rv"><b><span class="cnt" data-n="{{CONTADOR_2_NUMERO}}">{{CONTADOR_2_NUMERO}}</span>{{CONTADOR_2_SUFIJO}}</b><small>{{CONTADOR_2_TEXTO}}</small></div>
+      <div class="num rv"><b><span class="cnt" data-n="{{CONTADOR_3_NUMERO}}">{{CONTADOR_3_NUMERO}}</span>{{CONTADOR_3_SUFIJO}}</b><small>{{CONTADOR_3_TEXTO}}</small></div>
+    </div>
+  </div>
+</section>
+
+<!-- ANTES Y DESPUÉS: solo con fotos reales de un trabajo del negocio y permiso de la persona que aparece; si no hay, borrá la sección entera -->
+<section class="sec" id="antes-despues">
+  <div class="wrap">
+    <span class="kicker rv">{{KICKER_COMPARAR: El cambio}}</span>
+    <h2 class="rv">{{TITULO_COMPARAR}}</h2>
+    <div class="comparar rv">
+      <div class="foto despues" data-nombre="Después · assets/despues.jpg"><img src="assets/despues.jpg" alt="{{ALT_DESPUES}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"></div>
+      <div class="foto antes" data-nombre="Antes · assets/antes.jpg"><img src="assets/antes.jpg" alt="{{ALT_ANTES}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"></div>
+      <span class="et a">Antes</span><span class="et d">Después</span><span class="manija" aria-hidden="true"></span>
+      <input type="range" min="0" max="100" value="50" aria-label="Deslizá para comparar el antes y el después">
+    </div>
+  </div>
+</section>
+
+<section class="sec tablero-sec" id="horarios">
+  <div class="wrap">
+    <span class="kicker rv">{{KICKER_HORARIOS: Horarios}}</span>
+    <h2 class="rv">{{TITULO_HORARIOS}}</h2>
+    <div class="horas">{{HORARIOS: una fila por línea, <div><span>Lunes a viernes</span><b>7 a 23</b></div>}}</div>
+    <p class="nota rv">{{NOTA_HORARIOS: un dato real más, p. ej. las clases o los feriados}}</p>
+  </div>
+</section>
+
+<section class="galeria" id="galeria" aria-label="{{ARIA_GALERIA: p. ej. Fotos del gimnasio}}">
+  <div class="cols">
+    <div class="col" data-vel="-10">
+      <div class="foto duo" data-nombre="Foto 1 · assets/galeria-01.jpg"><img src="assets/galeria-01.jpg" alt="{{ALT_GALERIA_1}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"><span class="pie">{{PIE_GALERIA_1}}</span></div>
+      <div class="foto duo" data-nombre="Foto 4 · assets/galeria-04.jpg"><img src="assets/galeria-04.jpg" alt="{{ALT_GALERIA_4}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"><span class="pie">{{PIE_GALERIA_4}}</span></div>
+    </div>
+    <div class="col" data-vel="12">
+      <div class="foto duo" data-nombre="Foto 2 · assets/galeria-02.jpg"><img src="assets/galeria-02.jpg" alt="{{ALT_GALERIA_2}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"><span class="pie">{{PIE_GALERIA_2}}</span></div>
+      <div class="foto duo" data-nombre="Foto 5 · assets/galeria-05.jpg"><img src="assets/galeria-05.jpg" alt="{{ALT_GALERIA_5}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"><span class="pie">{{PIE_GALERIA_5}}</span></div>
+    </div>
+    <div class="col" data-vel="-22">
+      <div class="foto duo" data-nombre="Foto 3 · assets/galeria-03.jpg"><img src="assets/galeria-03.jpg" alt="{{ALT_GALERIA_3}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"><span class="pie">{{PIE_GALERIA_3}}</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec donde" id="donde">
+  <div class="wrap">
+    <span class="kicker rv">Dónde</span>
+    <h2 class="dir rv">{{DIRECCION_CORTA}}</h2>
+    <div class="fila"><p class="lead rv">{{DIRECCION_COMPLETA_Y_REFERENCIA}}</p><a class="btn btn-ghost mag rv" href="https://www.google.com/maps/search/?api=1&query={{DIRECCION_URLENCODED}}">Abrir en Google Maps</a></div>
+    <div class="vistas">
+    <div class="foto duo rv" data-nombre="Foto del local · assets/salon.jpg"><img src="assets/salon.jpg" alt="{{ALT_FOTO_GRANDE: la entrada o el frente del local}}" loading="lazy" onerror="this.parentElement.classList.add('sin')"><span class="pie">{{PIE_FOTO_GRANDE: p. ej. «La entrada»}}</span></div>
+    <div class="mapa rv" aria-hidden="true">
+      <svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">
+        <g fill="none" stroke-width="2" style="stroke:rgba(var(--ink-rgb),.07)"><path d="M0 90 H800 M0 200 H800 M0 330 H800 M110 0 V450 M300 0 V450 M520 0 V450 M690 0 V450"/></g>
+        <path d="M0 260 L800 205" stroke-width="18" fill="none" style="stroke:rgba(var(--acc-rgb),.5)"/>
+        <path d="M250 450 L560 0" stroke-width="10" fill="none" style="stroke:rgba(var(--acc2-rgb),.55)"/>
+        <text x="140" y="300" font-size="18" style="fill:rgba(var(--ink-rgb),.5);font-family:var(--f-texto);font-weight:700;letter-spacing:2px">{{MAPA_CALLE}}</text>
+        <text x="480" y="60" font-size="18" style="fill:rgba(var(--ink-rgb),.5);font-family:var(--f-texto);font-weight:700;letter-spacing:2px">{{MAPA_REFERENCIA: avenida o estación cercana}}</text>
+      </svg>
+      <div class="pin"><span>{{NOMBRE}}</span></div>
+    </div>
+    </div>
+  </div>
+</section>
+
+<section class="final" id="contacto">
+  <div class="cinta-final" aria-hidden="true"><div class="track">{{CTA_FINAL_PALABRAS: una frase corta en <span>, p. ej. <span>Vení a entrenar ✱</span>}}</div></div>
+  <div class="wrap">
+    <h2 class="rv">{{TITULO_CONTACTO}}</h2>
+    <div class="acciones rv">
+      <a class="redondo mag" href="https://wa.me/{{WHATSAPP}}?text={{MENSAJE_PREARMADO_URLENCODED}}">WhatsApp</a>
+      <div class="datos-c"><span>WhatsApp {{WHATSAPP_VISIBLE}}</span><a href="tel:{{TELEFONO_TEL}}">Teléfono {{TELEFONO_VISIBLE}}</a><a href="mailto:{{EMAIL}}">{{EMAIL}}</a></div>
+    </div>
+  </div>
+</section>
+
+<a class="wa-fijo btn btn-wa mag" href="https://wa.me/{{WHATSAPP}}?text={{MENSAJE_PREARMADO_URLENCODED}}" aria-label="Escribir por WhatsApp">WhatsApp</a>
+<footer>{{NOMBRE}} · {{DIRECCION_CORTA}} · {{QUE_HACE_CORTO}} · © {{AÑO}}</footer>
+
+<script>
+/* Antes y después: funciona aunque GSAP no cargue */
+(function(){var c=document.querySelector('.comparar'),r=c&&c.querySelector('input');if(!r)return;r.addEventListener('input',function(){c.style.setProperty('--pos',r.value+'%')});})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  if(!window.gsap||!window.ScrollTrigger){document.documentElement.classList.remove('js');return;}
+  gsap.registerPlugin(ScrollTrigger);
+  gsap.ticker.lagSmoothing(0); /* para que las animaciones avancen también en renders headless */
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.classList.remove('js');return;}
+  var hover=matchMedia('(hover:hover) and (pointer:fine)').matches, q=function(s,c){return (c||document).querySelector(s)}, qa=function(s,c){return [].slice.call((c||document).querySelectorAll(s))}, raiz=getComputedStyle(document.documentElement);
+
+  /* Parte las líneas del titular en letras (.c) dentro de palabras (.w) */
+  function partir(el){[].slice.call(el.childNodes).forEach(function(n){
+    if(n.nodeType===3){var f=document.createDocumentFragment();n.textContent.split(/(\s+)/).forEach(function(p){if(!p)return;
+      if(/^\s+$/.test(p)){f.appendChild(document.createTextNode(' '));return;}var w=document.createElement('span');w.className='w';
+      p.split('').forEach(function(ch){var c=document.createElement('span');c.className='c';c.textContent=ch;w.appendChild(c);});f.appendChild(w);});
+      n.parentNode.replaceChild(f,n);}else if(n.nodeType===1)partir(n);});}
+  var h1=q('.hero h1'),lineas=qa('.ln',h1);
+  h1.setAttribute('aria-label',lineas.map(function(l){return l.textContent.trim()}).join(' '));
+  lineas.forEach(function(l){l.setAttribute('aria-hidden','true');partir(l)});
+
+  /* Estados iniciales (solo con GSAP cargado): así, sin JS la web se ve completa */
+  gsap.set('.rv',{opacity:0,y:30});
+  gsap.set('.hero .c',{yPercent:-120,scaleY:1.7,opacity:0,transformOrigin:'50% 0'});
+  gsap.set('.tarjeta',{opacity:0,rotation:16,scale:.8});
+
+  /* Nav compacta, barra de progreso */
+  ScrollTrigger.create({start:60,onUpdate:function(s){q('#nav').classList.toggle('compacta',s.scroll()>60)}});
+  gsap.to('.progreso',{scaleX:1,ease:'none',scrollTrigger:{start:0,end:'max',scrub:.3}});
+
+  /* Hero: las letras caen, la tarjeta entra girando y, al bajar, las líneas se separan */
+  var tl=gsap.timeline({defaults:{ease:'expo.out'}});
+  tl.to('.hero .c',{yPercent:0,scaleY:1,opacity:1,duration:.9,stagger:.022},.1)
+    .to('.tarjeta',{opacity:1,rotation:5,scale:1,duration:1.4,ease:'elastic.out(1,.6)'},.5)
+    .to('.hero .rv',{opacity:1,y:0,duration:.8,stagger:.1},.7);
+  lineas.forEach(function(l){gsap.to(l,{xPercent:12*(parseFloat(l.dataset.dir)||1),ease:'none',scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:true}})});
+  gsap.to('.tarjeta .foto',{rotation:-5,scale:1.08,ease:'none',scrollTrigger:{trigger:'.hero',start:'top top',end:'bottom top',scrub:true}});
+  gsap.to('.sticker svg',{rotation:360,duration:12,ease:'none',repeat:-1});
+
+  /* Cintas y frase final: desfilan solas, aceleran y se tuercen con la velocidad del scroll */
+  var lazos=[];
+  qa('.cinta .track, .cinta-final .track').forEach(function(t,i){t.innerHTML+=t.innerHTML;t.innerHTML+=t.innerHTML;
+    lazos.push(gsap.fromTo(t,{xPercent:i===1?-50:0},{xPercent:i===1?0:-50,duration:i===2?30:22,ease:'none',repeat:-1}));});
+  var torcer=gsap.quickSetter(qa('.cinta .track'),'skewX','deg'),vel=0;
+  ScrollTrigger.create({start:0,end:'max',onUpdate:function(s){vel=gsap.utils.clamp(-16,16,s.getVelocity()/140)}});
+  gsap.ticker.add(function(){vel*=.9;torcer(vel);lazos.forEach(function(l){l.timeScale(1+Math.abs(vel)/3)})});
+
+  /* Reveals: cada bloque aparece cuando llega */
+  ScrollTrigger.batch('.sec .rv, .final .rv',{start:'top 88%',onEnter:function(b){gsap.to(b,{opacity:1,y:0,duration:.8,ease:'power3.out',stagger:.08,overwrite:true})}});
+
+  /* Planes: cada uno se achica y se apaga cuando el siguiente lo tapa */
+  var planes=qa('.plan');
+  planes.forEach(function(p,i){var sig=planes[i+1];if(!sig)return;
+    gsap.timeline({scrollTrigger:{trigger:sig,start:'top bottom',end:'top 30%',scrub:true}}).to(p,{scale:.92,ease:'none'},0).to(q('.velo',p),{opacity:.55,ease:'none'},0);});
+  planes.forEach(function(p){gsap.from(q('.texto',p),{opacity:0,y:40,duration:.8,ease:'power3.out',scrollTrigger:{trigger:p,start:'top 80%'}})});
+
+  /* El bloque cambia de color al entrar; las razones entran de a una */
+  var fl=q('.flip');
+  if(fl){gsap.fromTo(fl,{backgroundColor:raiz.getPropertyValue('--bg').trim(),color:raiz.getPropertyValue('--ink').trim()},{backgroundColor:raiz.getPropertyValue('--acc').trim(),color:raiz.getPropertyValue('--sobre-acc').trim(),ease:'none',scrollTrigger:{trigger:fl,start:'top 85%',end:'top 30%',scrub:true}});
+    gsap.from(qa('.razones li',fl),{opacity:0,y:30,duration:.8,stagger:.12,ease:'power3.out',scrollTrigger:{trigger:'.razones',start:'top 82%'}});}
+
+  /* Números que se llenan de abajo hacia arriba mientras cuentan */
+  qa('.num b').forEach(function(b){var el=q('.cnt',b),n=parseInt(el.dataset.n,10);gsap.set(b,{backgroundPosition:'0% 0%'});
+    ScrollTrigger.create({trigger:b,start:'top 85%',once:true,onEnter:function(){
+      gsap.to(b,{backgroundPosition:'0% 100%',duration:1.6,ease:'power2.inOut'});
+      if(!isNaN(n))gsap.fromTo(el,{innerText:0},{innerText:n,duration:1.6,ease:'power2.out',snap:{innerText:1}});}});});
+
+  /* Antes y después: la manija muestra el cambio al llegar */
+  var cmp=q('.comparar');
+  if(cmp)ScrollTrigger.create({trigger:cmp,start:'top 70%',once:true,onEnter:function(){gsap.fromTo(cmp,{'--pos':'92%'},{'--pos':'50%',duration:1.8,ease:'power3.inOut',onComplete:function(){q('input',cmp).value=50}})}});
+
+  /* Tablero: las filas se dan vuelta y las letras se reacomodan como en un aeropuerto */
+  var abc='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  function revolver(el,d){var fin=el.textContent,o={p:0};gsap.to(o,{p:1,duration:d,ease:'none',onUpdate:function(){var k=Math.floor(o.p*fin.length),s='';
+    for(var i=0;i<fin.length;i++)s+=(i<k||fin[i]===' ')?fin[i]:abc[Math.floor(Math.random()*abc.length)];el.textContent=s;},onComplete:function(){el.textContent=fin}});}
+  var filas=qa('.horas div');
+  if(filas.length)ScrollTrigger.create({trigger:'.horas',start:'top 80%',once:true,onEnter:function(){
+    gsap.from(filas,{rotationX:-90,transformPerspective:700,transformOrigin:'50% 0',opacity:0,duration:.7,stagger:.12,ease:'back.out(1.6)'});
+    filas.forEach(function(f,i){qa('span,b',f).forEach(function(t){gsap.delayedCall(i*.12,function(){revolver(t,1.1)})})});}});
+
+  /* Galería: cada columna corre a su velocidad (escritorio) */
+  var mm=gsap.matchMedia();
+  mm.add('(min-width: 900px)',function(){qa('.col').forEach(function(c){gsap.fromTo(c,{yPercent:0},{yPercent:parseFloat(c.dataset.vel)||0,ease:'none',scrollTrigger:{trigger:'.galeria',start:'top bottom',end:'bottom top',scrub:true}})})});
+  mm.add('(max-width: 899px)',function(){gsap.from('.cols .foto',{opacity:0,y:40,stagger:.08,duration:.7,scrollTrigger:{trigger:'.cols',start:'top 85%'}})});
+
+  /* Cursor propio y botones magnéticos con quickTo (no gsap.to en mousemove) */
+  if(hover){var cur=q('.cursor'),cx=gsap.quickTo(cur,'x',{duration:.25,ease:'power3'}),cy=gsap.quickTo(cur,'y',{duration:.25,ease:'power3'});
+    gsap.set(cur,{display:'block',opacity:0});
+    addEventListener('mousemove',function(e){if(!cur.dataset.ve){cur.dataset.ve=1;gsap.set(cur,{x:e.clientX,y:e.clientY});gsap.to(cur,{opacity:1,duration:.3})}cx(e.clientX);cy(e.clientY)});
+    document.addEventListener('mouseover',function(e){gsap.to(cur,{scale:e.target.closest('a,button,input')?3.2:1,duration:.3,overwrite:'auto'})});
+    qa('.mag').forEach(function(b){
+      var qx=gsap.quickTo(b,'x',{duration:.35,ease:'power3'}),qy=gsap.quickTo(b,'y',{duration:.35,ease:'power3'}),k=b.classList.contains('redondo')?.5:.3;
+      b.addEventListener('mousemove',function(e){var r=b.getBoundingClientRect();qx((e.clientX-r.left-r.width/2)*k);qy((e.clientY-r.top-r.height/2)*k)});
+      b.addEventListener('mouseleave',function(){gsap.to(b,{x:0,y:0,duration:.7,ease:'elastic.out(1,.35)'})});
+    });}
+})();
+</script>
+</body>
+</html>

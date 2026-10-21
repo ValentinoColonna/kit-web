@@ -10,7 +10,8 @@ Uso:
 
 Errores (hay que corregir): sin viewport, sin título o fuera de medida, sin descripción o fuera de medida,
 H1 distinto de uno, sin botón de WhatsApp (wa.me), sin teléfono tel:, imágenes sin alt, sin JSON-LD LocalBusiness,
-scripts o hojas de estilo externas (la página tiene que ser autónoma), sin lang.
+scripts o hojas de estilo externas (la página tiene que ser autónoma), sin lang, slots {{...}} del esqueleto sin completar.
+Los placeholders y los slots se buscan fuera de los comentarios HTML.
 Avisos: textos que suenan a inventados («líderes», «premiados», «+N clientes», «N años de experiencia» sin dato
 del brief), enlaces vacíos (#), imágenes que no existen en la carpeta.
 Sale con 0 si pasa y 1 si hay errores. Solo Python 3.
@@ -20,6 +21,17 @@ import os
 import re
 import sys
 from html.parser import HTMLParser
+
+# Subtipos de LocalBusiness de schema.org que usan los negocios chicos (además de cualquier «…Store»)
+SUBTIPOS = {
+    "Restaurant", "FoodEstablishment", "CafeOrCoffeeShop", "Bakery", "BarOrPub", "IceCreamShop", "FastFoodRestaurant", "Brewery", "Winery",
+    "Dentist", "MedicalBusiness", "MedicalClinic", "Physician", "Optician", "Pharmacy", "Physiotherapy", "VeterinaryCare",
+    "HealthAndBeautyBusiness", "HairSalon", "BeautySalon", "DaySpa", "NailSalon", "TattooParlor", "ExerciseGym", "HealthClub",
+    "SportsActivityLocation", "SportsClub", "AutoDealer", "AutoRepair", "AutomotiveBusiness", "AutoBodyShop", "AutoPartsStore",
+    "ProfessionalService", "AccountingService", "LegalService", "Attorney", "Notary", "RealEstateAgent", "InsuranceAgency",
+    "HomeAndConstructionBusiness", "Electrician", "Plumber", "HVACBusiness", "GeneralContractor", "HousePainter", "Locksmith",
+    "Store", "Florist", "ChildCare", "Library", "TravelAgency", "LodgingBusiness", "Hotel", "BedAndBreakfast", "Campground",
+}
 
 
 class Lector(HTMLParser):
@@ -115,7 +127,7 @@ def main():
             tipos = []
             for item in (o if isinstance(o, list) else [o]):
                 tipos.append(item.get("@type", ""))
-            if any("LocalBusiness" in str(x) or x in ("Store", "Restaurant", "Dentist", "AutoDealer", "AutoRepair", "HairSalon", "MedicalBusiness", "ProfessionalService") for x in tipos):
+            if any("LocalBusiness" in str(x) or x in SUBTIPOS or str(x).endswith("Store") for x in tipos):
                 ld_ok = True
         except Exception:
             avisos.append("hay un JSON-LD que no es JSON válido")
@@ -143,7 +155,11 @@ def main():
         m = re.search(patron, texto, re.I)
         if m:
             avisos.append(f"{msg}: «{m.group(0)}» (confirmar que lo dijo el dueño)")
-    placeholders = re.findall(r"\[[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ \-/]{2,}\]|PENDIENTE-A-CONFIRMAR", src)
+    visible = re.sub(r"<!--.*?-->", "", src, flags=re.S)  # los comentarios no se ven en la página
+    slots = re.findall(r"\{\{[^{}]{1,60}", visible)
+    if slots:
+        errores.append(f"quedan {len(slots)} slots del esqueleto sin completar: {', '.join(sorted(set(s[2:].split(':')[0].strip() for s in slots))[:5])} (completalos o dejalos como [PLACEHOLDER])")
+    placeholders = re.findall(r"\[[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ \-/]{2,}\]|PENDIENTE-A-CONFIRMAR", visible)
     if placeholders:
         msg = f"quedan {len(placeholders)} placeholders sin completar: {', '.join(sorted(set(placeholders))[:5])}"
         (avisos if borrador else errores).append(msg + ("" if borrador else " (mientras falten datos, validá con --borrador)"))

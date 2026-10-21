@@ -1,11 +1,11 @@
 ---
 name: rehacer-web
-description: Rehace la web vieja de un negocio chico con IA y la deja lista para publicar y medir. Audita la web actual (celular, velocidad, contacto, Google) con un informe visual, arma el brief con lo que ya dice la web y lo confirma con la persona en dos o tres mensajes, genera una página nueva de una sola pantalla con scroll animado, WhatsApp y los datos del negocio, la valida, la revisa en celular y escritorio, deja la carpeta lista para Netlify Drop, mide el antes y el después y arma los mensajes para ofrecérsela al dueño. Usala cuando alguien pase el link o el HTML de una web vieja, o el nombre de un negocio sin web, y quiera una nueva simple hoy, o para abrir una conversación con un negocio mostrándole lo que le falta a su web. No la uses para tiendas online, reservas, webs de varias páginas con login ni para prometer posiciones en Google.
+description: Rehace la web vieja de un negocio chico con IA y la deja lista para publicar y medir. Audita la web actual (celular, velocidad, contacto, Google) con un informe visual, arma el brief con lo que ya dice la web y lo confirma con la persona en dos o tres mensajes, genera una página nueva de una sola pantalla con scroll animado (cinco estilos para elegir), WhatsApp y los datos del negocio, la valida, la revisa en celular y escritorio, deja la carpeta lista para Netlify Drop, mide el antes y el después y arma los mensajes para ofrecérsela al dueño. Usala cuando alguien pase el link o el HTML de una web vieja, o el nombre de un negocio sin web, y quiera una nueva simple hoy, o para abrir una conversación con un negocio mostrándole lo que le falta a su web. No la uses para tiendas online, reservas, webs de varias páginas con login ni para prometer posiciones en Google.
 license: MIT
 metadata:
   author: Valentino Colonna (@valentino.ia)
   source: https://github.com/ValentinoColonna/kit-web
-  version: "1.4"
+  version: "1.5"
 ---
 
 # Rehacer la web de un negocio con IA
@@ -36,9 +36,9 @@ La persona pasa una de tres cosas: **el link** de la web actual, **un archivo `.
 ### 2 · Brief (con opciones, no un interrogatorio)
 Armá `webs/<negocio>/brief.md` con la plantilla `rehacer-web/references/brief-plantilla.md`. El auditor deja en `auditoria.md` la sección «Datos del negocio que dice la web vieja» (teléfonos, WhatsApp, emails, dirección, horarios, redes; si la web tiene página de contacto, también la lee) y el texto completo en `auditoria-texto-web-vieja.txt`. Con eso **proponé y que la persona elija**: preguntas de opción múltiple (ver «Cómo preguntar» en `CLAUDE.md`), de a una ronda, con lo detectado como opciones. Ejemplo de las tres rondas:
 - **Ronda 1, confirmar lo detectado:** «Saqué esto de la web: [dirección], [horarios], [email]. ¿Está bien?» (Todo bien / Hay algo para corregir). «¿Cuál es el WhatsApp?» (cada celular detectado como opción / Otro). «¿Qué hacen?» (los servicios detectados, selección múltiple).
-- **Ronda 2, identidad:** «¿Qué colores usamos?» (tres paletas acordes al rubro, con nombre y dos colores cada una / Los del cartel o el Instagram). **La paleta es la del negocio.** «¿Qué destacamos arriba de todo?» (las promesas o datos que dice la web, selección múltiple).
+- **Ronda 2, identidad:** «¿Qué estilo de página?» (el esqueleto recomendado para el rubro primero, marcado «(recomendado)», y dos más que también le queden bien, cada uno con su línea de `rehacer-web/plantilla/COMO-USAR-EL-ESQUELETO.md`; ver «Qué esqueleto» en el paso 4). «¿Qué colores usamos?» (tres paletas acordes al rubro, con nombre y dos colores cada una / Los del cartel o el Instagram). **La paleta es la del negocio.** «¿Qué destacamos arriba de todo?» (las promesas o datos que dice la web, selección múltiple).
 - **Ronda 3, fotos y catálogo:** «¿Fotos?» (Las dejo en `entrada/` / Buscalas en la web del negocio (recomendado si tiene) / Seguimos sin fotos). «¿Mostramos los productos o unidades que tiene la web?» (Sí, sin precio / Sí, con precio / No).
-Lo que no se sabe queda como `[PLACEHOLDER]` visible. Nunca inventes ni omitas en silencio.
+Anotá en el brief el estilo elegido (`Estilo de página: mantel`). Lo que no se sabe queda como `[PLACEHOLDER]` visible. Nunca inventes ni omitas en silencio.
 
 ### 3 · Fotos (en este orden)
 1. **Las del dueño:** lo que deje en `entrada/` (logo, local, equipo, productos).
@@ -57,15 +57,27 @@ Copialas a `webs/<negocio>/assets/` con los nombres fijos de `rehacer-web/refere
 ### 4 · Generar la página
 Antes de generar, decidí tono, «sección estrella» y CTA según el rubro:
 
-| Rubro | Tono | Sección estrella | CTA |
-|---|---|---|---|
-| Taller, concesionaria, servicio técnico | directo, confiable | qué hacemos + garantías | «Escribir por WhatsApp» |
-| Restaurante, bar, cafetería | cálido, sensorial | la carta o los platos con precio | «Reservar» / «Pedir por WhatsApp» |
-| Clínica, consultorio, profesional | serio, cercano, fondo claro | especialidades y quién atiende | «Pedir turno» |
-| Peluquería, estética, gimnasio | personal, enérgico | servicios con precios o planes | «Pedir turno» / «Empezar» |
-| Tienda, negocio local | práctico | productos destacados | «Visitanos» / «Consultar» |
+| Rubro | Tono | Sección estrella | CTA | Esqueleto recomendado (alternativas) |
+|---|---|---|---|---|
+| Taller, concesionaria, servicio técnico, oficios | directo, confiable | qué hacemos + garantías | «Escribir por WhatsApp» | Noche (Pulso, Aire) |
+| Restaurante, bodegón, café, panadería, heladería | cálido, sensorial | la carta o los platos con precio | «Reservar» / «Pedir por WhatsApp» | Mantel (Vidriera, Noche) |
+| Bar, cervecería, boliche | nocturno, con onda | la carta y los horarios | «Reservar» / «Pedir por WhatsApp» | Noche (Pulso, Mantel) |
+| Clínica, consultorio, profesional, estudio | serio, cercano, fondo claro | especialidades y quién atiende | «Pedir turno» | Aire (Mantel, Noche) |
+| Peluquería, barbería, estética, gimnasio | personal, enérgico | servicios con precios o planes | «Pedir turno» / «Empezar» | Pulso (Aire, Vidriera) |
+| Tienda, vivero, ferretería, negocio local | práctico | productos destacados | «Visitanos» / «Consultar» | Vidriera (Mantel, Aire) |
 
-- **Camino principal, el esqueleto:** copiá `rehacer-web/plantilla/esqueleto-espectaculo.html` a `webs/<negocio>/index.html` y completá todos los `{{…}}` con el brief, siguiendo `rehacer-web/plantilla/COMO-USAR-EL-ESQUELETO.md`. La mecánica del scroll ya está hecha y probada: tu trabajo es el contenido, la paleta y adaptar las secciones al rubro (renombrar, sacar lo que no aplique, repetir el ítem del catálogo por cada ítem real y reemplazar el «momento firma» por uno propio del negocio).
+**Qué esqueleto:** hay cinco en `rehacer-web/plantilla/`, con la misma mecánica probada y lenguajes visuales distintos. Se ofrece el recomendado del rubro en la ronda 2 del brief, con dos alternativas; la persona elige. Si en `webs/` ya hay una web del mismo rubro hecha con el recomendado (lo dice su `brief.md`), recomendá la primera alternativa, para que no salgan iguales. Si la persona no contesta, va el recomendado. Cualquier esqueleto sirve para cualquier rubro.
+
+| Esqueleto | Archivo | En una línea |
+|---|---|---|
+| Noche | `esqueleto-espectaculo.html` | Oscuro y técnico: faro que recorre la ruta, servicios en horizontal fijos, garantía que se firma sola |
+| Mantel | `esqueleto-mantel.html` | Papel cálido y serif: foto en arco que se abre, la carta con foto que sigue al mouse, ticket que se imprime |
+| Aire | `esqueleto-aire.html` | Blanco y sereno: turno que se confirma solo, especialidades con columna fija, pasos que se trazan |
+| Pulso | `esqueleto-pulso.html` | Negro y acento eléctrico: letras gigantes que caen, planes que se apilan, horarios en tablero de aeropuerto |
+| Vidriera | `esqueleto-vidriera.html` | Claro con bordes gruesos: mosaico que se arma, cartel ABIERTO/CERRADO real, «sumar a la consulta» por WhatsApp |
+
+- **Camino principal, el esqueleto:** copiá el esqueleto elegido a `webs/<negocio>/index.html` y completá todos los `{{…}}` con el brief, siguiendo `rehacer-web/plantilla/COMO-USAR-EL-ESQUELETO.md` (incluye los pares de fuentes de cada esqueleto: elegí uno, no siempre el primero). La mecánica del scroll ya está hecha y probada: tu trabajo es el contenido, la paleta y adaptar las secciones al rubro (renombrar, sacar lo que no aplique, repetir el ítem del catálogo por cada ítem real y, si el negocio tiene uno más propio, reemplazar el «momento firma»). Al terminar, borrá los comentarios de ayuda `<!-- … -->`.
+- **«Probá con otro estilo»:** copiá otro esqueleto encima de `index.html` y volvé a completarlo con el mismo brief y las mismas fotos (los nombres de `assets/` son los mismos en los cinco). Después, validar y gate otra vez.
 - **La especificación** que manda en todo lo demás es `rehacer-web/references/prompt-web-nueva-espectaculo.md`: leela entera antes de completar el esqueleto. Si la persona pide algo mínimo, sin animaciones, usá `rehacer-web/references/prompt-web-nueva.md`.
 - **Corrección humana a la vista:** mostrale los textos clave (titular, subtítulo, servicios) y preguntá si algo sobra o falta. Lo que el dueño no dijo, sale.
 
