@@ -1,11 +1,11 @@
 ---
 name: rehacer-web
-description: Rehace la web vieja de un negocio chico con IA y la deja lista para publicar y medir. Audita la web actual (celular, velocidad, contacto, Google) con un informe visual, arma el brief con lo que ya dice la web y lo confirma con la persona en dos o tres mensajes, genera una página nueva de una sola pantalla con scroll animado, WhatsApp y los datos del negocio, la valida, la revisa en celular y escritorio, deja la carpeta lista para Netlify Drop y mide el antes y el después. Usala cuando alguien pase el link o el HTML de una web vieja, o el nombre de un negocio sin web, y quiera una nueva simple hoy, o para abrir una conversación con un negocio mostrándole lo que le falta a su web. No la uses para tiendas online, reservas, webs de varias páginas con login ni para prometer posiciones en Google.
+description: Rehace la web vieja de un negocio chico con IA y la deja lista para publicar y medir. Audita la web actual (celular, velocidad, contacto, Google) con un informe visual, arma el brief con lo que ya dice la web y lo confirma con la persona en dos o tres mensajes, genera una página nueva de una sola pantalla con scroll animado, WhatsApp y los datos del negocio, la valida, la revisa en celular y escritorio, deja la carpeta lista para Netlify Drop, mide el antes y el después y arma los mensajes para ofrecérsela al dueño. Usala cuando alguien pase el link o el HTML de una web vieja, o el nombre de un negocio sin web, y quiera una nueva simple hoy, o para abrir una conversación con un negocio mostrándole lo que le falta a su web. No la uses para tiendas online, reservas, webs de varias páginas con login ni para prometer posiciones en Google.
 license: MIT
 metadata:
   author: Valentino Colonna (@valentino.ia)
   source: https://github.com/ValentinoColonna/kit-web
-  version: "1.3"
+  version: "1.4"
 ---
 
 # Rehacer la web de un negocio con IA
@@ -76,6 +76,7 @@ Antes de generar, decidí tono, «sección estrella» y CTA según el rubro:
 
 ### 6 · Publicar (lo hace la persona)
 - Prepará `webs/<negocio>-publicar/` con `index.html` y `assets/`, sin los `.md` ni `gate/`.
+- **Si todavía es una muestra para ofrecer** (el dueño no la pidió), agregá en el `<head>` de esa copia `<meta name="robots" content="noindex">`, para que Google no la muestre, validala con `--muestra` y avisá que es una propuesta. Se saca cuando el dueño acepta.
 - Si quedan marcos sin foto, cambiá su `data-nombre` por un texto para el público: el nombre del producto, del plato, del lugar o del negocio. El nombre del archivo (`assets/…`) solo sirve mientras se trabaja.
 - Decile que abra https://app.netlify.com/drop y arrastre esa carpeta. Netlify le da una dirección con candado al instante. Para que no venza, que cree la cuenta gratis. Dominio propio: `rehacer-web/references/publicar-netlify.md`.
 - Vos no publicás nada.
@@ -84,6 +85,13 @@ Antes de generar, decidí tono, «sección estrella» y CTA según el rubro:
 - La misma medición de PageSpeed con la URL nueva. Antes y después lado a lado. Si algo dio peor, decilo y explicá por qué.
 - **Resumen final, siempre:** la URL publicada, qué hallazgos de la auditoría se resolvieron, qué queda pendiente del dueño (fotos, dominio, datos en placeholder) y cómo cambia él mismo un texto o una foto.
 
+### 8 · Ofrecérsela al dueño (los mensajes los manda la persona)
+- Seguí `rehacer-web/references/ofrecer-al-dueno.md`: armá `webs/<negocio>/mensajes.md` con los cuatro mensajes (primer contacto con los tres hallazgos, el link, el seguimiento y el último) y las respuestas a las preguntas de siempre, completados con los datos reales de la auditoría, el brief y el link de la muestra.
+- Preguntá con opciones cómo firma (su nombre / su marca / lo completo yo), qué incluye su servicio (ajustes, publicación y medición / solo publicación / lo completo yo) y el precio (lo dejo en blanco como `[TU PRECIO]` / lo pongo ahora). No sugieras montos.
+- Si la muestra ya está publicada, comprobá que la copia tenga `noindex`: `python3 rehacer-web/scripts/validar_sitio.py webs/<negocio>-publicar/index.html --muestra`. Si no lo tiene, agregalo y explicá cómo volver a subirla desde la pestaña Deploys del mismo sitio.
+- Mostrale los mensajes y preguntá si cambia algo del tono. **No mandes nada vos**: ni WhatsApp ni email.
+- Si el dueño dice que no, recordale borrar la muestra de Netlify.
+
 ## Qué entrega esta skill
 - `webs/<negocio>/auditoria.md` y `auditoria.html`, y el teaser de tres hallazgos.
 - `webs/<negocio>/fotos-candidatas/` con la hoja de contactos, si la web tenía fotos.
@@ -91,13 +99,14 @@ Antes de generar, decidí tono, «sección estrella» y CTA según el rubro:
 - `webs/<negocio>/index.html` con `assets/`, validado y revisado en `gate/`.
 - `webs/<negocio>-publicar/`, lista para Netlify Drop.
 - El antes y el después, y el resumen final para el dueño.
+- `webs/<negocio>/mensajes.md`, con los mensajes para ofrecérsela.
 
 ## Qué no hacer
 - No inventar datos del negocio: ni reseñas, ni años, ni clientes, ni premios, ni «somos líderes».
 - No usar fotos ajenas. Fotos del dueño o de su propia web; si no hay, ninguna, o de un banco libre (Pexels, Unsplash) solo si la persona lo pide, marcadas como ilustrativas. No bajar fotos de Google Maps, Instagram ni buscadores.
 - No usar la paleta de quien usa el kit en la web del negocio.
 - No prometer resultados de ventas ni de Google.
-- No publicar ni subir datos del negocio a otros servicios.
+- No publicar ni subir datos del negocio a otros servicios. No mandar mensajes al dueño: los manda la persona.
 - No meter librerías que no sean GSAP y ScrollTrigger (CDN) y Google Fonts. El espectáculo se hace con esa receta, degradando sin JavaScript y respetando `prefers-reduced-motion`.
 
 ---

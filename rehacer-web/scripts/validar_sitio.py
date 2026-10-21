@@ -6,6 +6,7 @@ Uso:
     python3 validar_sitio.py index.html [--borrador]
 
 --borrador: los placeholders [ASÍ] son avisos, no errores (para validar antes de tener todos los datos). Sin el flag, bloquean: no se publica con placeholders.
+--muestra: es una muestra para ofrecer al dueño: exige <meta name="robots" content="noindex">. Sin el flag, si la página tiene noindex, avisa (la versión definitiva no lo lleva).
 
 Errores (hay que corregir): sin viewport, sin título o fuera de medida, sin descripción o fuera de medida,
 H1 distinto de uno, sin botón de WhatsApp (wa.me), sin teléfono tel:, imágenes sin alt, sin JSON-LD LocalBusiness,
@@ -79,6 +80,7 @@ class Lector(HTMLParser):
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     borrador = "--borrador" in sys.argv
+    muestra = "--muestra" in sys.argv
     if len(args) != 1:
         print(__doc__)
         sys.exit(2)
@@ -129,6 +131,11 @@ def main():
     css_raros = [c for c in p.css_ext if "fonts.googleapis.com" not in c]
     if css_raros:
         errores.append(f"hojas de estilo externas no permitidas: {', '.join(css_raros[:3])} (solo Google Fonts)")
+    robots = p.metas.get("robots", "").lower()
+    if muestra and "noindex" not in robots:
+        errores.append('es una muestra y no tiene <meta name="robots" content="noindex">: Google podría mostrarla antes de que el dueño diga que sí')
+    elif not muestra and "noindex" in robots:
+        avisos.append("tiene noindex: Google no la va a mostrar. Si ya es la versión definitiva, sacalo")
     if not p.lang:
         errores.append("falta lang en <html> (por ejemplo lang=\"es-AR\")")
     texto = " ".join(p.texto)

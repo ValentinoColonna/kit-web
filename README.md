@@ -15,7 +15,7 @@ Funciona con Sonnet. Necesitás Python 3 (en Mac ya viene) y Google Chrome para 
 | Qué | Dónde | Para qué |
 |---|---|---|
 | Instrucciones de arranque | `CLAUDE.md` | Lo que hace Claude Code cuando escribís «hola» |
-| La skill `rehacer-web` | `rehacer-web/SKILL.md` | Los siete pasos: auditar, brief, fotos, generar, validar, publicar, medir |
+| La skill `rehacer-web` | `rehacer-web/SKILL.md` | Los ocho pasos: auditar, brief, fotos, generar, validar, publicar, medir y ofrecérsela al dueño |
 | Carpetas de trabajo | `entrada/` y `webs/` | Lo que traés (HTML, logo, fotos) y cada web nueva, en su carpeta |
 | Auditor de la web vieja | `rehacer-web/scripts/auditar_web.py` | Te dice qué tiene y qué le falta a la web actual (celular, WhatsApp, Google, peso). Con `--html` genera un informe visual para mostrarle al dueño y el «teaser»: los 3 hallazgos para abrir la conversación |
 | Buscador de fotos | `rehacer-web/scripts/buscar_fotos.py` | Baja las fotos que el negocio ya publicó en su propia web (galería, productos, fichas) y arma una hoja de contactos para elegir. No toca Google Maps ni Instagram |
@@ -27,6 +27,7 @@ Funciona con Sonnet. Necesitás Python 3 (en Mac ya viene) y Google Chrome para 
 | Gate visual | `rehacer-web/references/gate-visual.md` | Cuatro renders con Chrome headless (escritorio y celular, con y sin JS) y checklist de cierre |
 | Prompt sobrio | `rehacer-web/references/prompt-web-nueva.md` | Versión mínima sin librerías, por si el negocio la pide |
 | Cómo publicar | `rehacer-web/references/publicar-netlify.md` | Netlify Drop, gratis, y dominio propio |
+| Ofrecérsela al dueño | `rehacer-web/references/ofrecer-al-dueno.md` | Los mensajes de WhatsApp con los hallazgos reales, el seguimiento y las respuestas a «¿cuánto sale?». El precio lo pone cada uno |
 | Checklist | `rehacer-web/references/checklist.md` | Para tildar |
 
 ## Sin Claude Code (los scripts solos)

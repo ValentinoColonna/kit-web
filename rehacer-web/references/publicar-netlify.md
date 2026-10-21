@@ -6,7 +6,9 @@
 3. Netlify te da una dirección del tipo `nombre-raro.netlify.app`. Ya está en línea, con HTTPS.
 4. Para que no venza y poder cambiarle el nombre, creá una cuenta gratuita (la misma página te lo ofrece) y, en Site settings → Change site name, poné algo como `nombre-del-negocio.netlify.app`.
 
-Cada vez que corrijas la página, volvés a arrastrar la carpeta: reemplaza la anterior.
+Cada vez que corrijas la página, entrá al sitio en Netlify, pestaña **Deploys**, y arrastrá la carpeta ahí: reemplaza la versión anterior y el link queda igual. Si la arrastrás de nuevo en `/drop`, Netlify crea **otro sitio** con otro link.
+
+**Muestra para ofrecer:** mientras el dueño no la pidió, la copia publicada lleva `<meta name="robots" content="noindex">` (comprobalo con `validar_sitio.py index.html --muestra`). Si dice que no: Site configuration → Delete this site.
 
 ## Dominio propio (si el dueño ya tiene uno)
 1. En Netlify: Domain management → Add a domain → escribir el dominio del negocio.
