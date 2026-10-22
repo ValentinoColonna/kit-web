@@ -46,12 +46,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:40;display:flex;align-items:cent
 nav.compacta{background:rgba(var(--bg-rgb),.97);padding:10px 20px;box-shadow:0 1px 0 rgba(var(--ink-rgb),.1)}
 nav .marca{font-family:var(--f-display);font-size:1.55rem;line-height:1;text-transform:uppercase;text-decoration:none}
 nav .marca small{display:block;font-family:var(--f-texto);font-size:.68rem;font-weight:600;letter-spacing:.16em;color:var(--ink2);margin-top:3px}
-nav .links{display:none;gap:24px;font-weight:600;font-size:.9rem;letter-spacing:.06em;text-transform:uppercase}nav .links a{text-decoration:none}nav .links a:hover{color:var(--acc)}
+nav .links{display:none;gap:24px;font-weight:600;font-size:.9rem;letter-spacing:.06em;text-transform:uppercase}nav .links a{text-decoration:none}nav .links a:hover{color:var(--acc-t,var(--acc))}
 @media(min-width:960px){nav .links{display:flex}}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:999px;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase;will-change:transform}
 .btn-acc{background:var(--acc);color:var(--sobre-acc)}
 .btn-wa{background:var(--wa);color:#07210f}
-.btn-ghost{border:2px solid rgba(var(--ink-rgb),.35)}.btn-ghost:hover{border-color:var(--acc);color:var(--acc)}
+.btn-ghost{border:2px solid rgba(var(--ink-rgb),.35)}.btn-ghost:hover{border-color:var(--acc);color:var(--acc-t,var(--acc))}
 
 /* ===== Fotos en duotono y paneles ===== */
 .foto{position:relative;overflow:hidden;border-radius:var(--r);isolation:isolate;background:repeating-linear-gradient(-45deg,rgba(var(--acc-rgb),.13) 0 14px,transparent 14px 28px),var(--bg2)}
@@ -66,12 +66,12 @@ nav .links{display:none;gap:24px;font-weight:600;font-size:.9rem;letter-spacing:
 /* ===== Hero: tipografía gigante, foto inclinada y sticker ===== */
 .hero{min-height:100svh;position:relative;display:grid;align-content:center;gap:34px;padding:108px 20px 56px;overflow:hidden}
 .hero .cont{max-width:1280px;width:100%;margin:0 auto;position:relative;z-index:2}
-.kicker{display:inline-block;margin:0 0 16px;font-weight:700;font-size:.82rem;letter-spacing:.18em;text-transform:uppercase;color:var(--acc)}
+.kicker{display:inline-block;margin:0 0 16px;font-weight:700;font-size:.82rem;letter-spacing:.18em;text-transform:uppercase;color:var(--acc-t,var(--acc))}
 .hero h1{font-size:clamp(3.4rem,13.5vw,13rem);line-height:.86;hyphens:auto}
 @media(min-width:900px){.hero h1{font-size:clamp(3.4rem,11.5vw,11rem);max-width:calc(100% - 30vw)}}
 .hero h1 .ln{display:block}
 .hero h1 .hueca{color:transparent;-webkit-text-stroke:2px var(--ink)}
-.hero h1 em{font-style:normal;color:var(--acc)}
+.hero h1 em{font-style:normal;color:var(--acc-t,var(--acc))}
 .hero .c{display:inline-block}.hero .w{display:inline-block;white-space:nowrap}
 .hero .bajo{display:grid;gap:22px;margin-top:30px;max-width:620px}
 .hero .sub{margin:0;color:var(--ink2);font-size:1.12rem;max-width:44ch}
@@ -79,7 +79,7 @@ nav .links{display:none;gap:24px;font-weight:600;font-size:.9rem;letter-spacing:
 .tarjeta{position:relative;width:min(72vw,340px);margin:0 auto;transform:rotate(5deg);z-index:1}
 .tarjeta .foto{aspect-ratio:3/4;border-radius:18px;box-shadow:0 40px 80px rgba(0,0,0,.45)}
 @media(min-width:900px){.tarjeta{position:absolute;right:5vw;top:clamp(110px,17vh,190px);width:min(22vw,340px);margin:0}}
-.sticker{position:absolute;left:-46px;bottom:-40px;width:118px;height:118px;z-index:3;border-radius:50%;background:var(--acc2);color:var(--sobre-acc);display:grid;place-items:center}
+.sticker{position:absolute;left:-46px;bottom:-40px;width:118px;height:118px;z-index:3;border-radius:50%;background:var(--acc2);color:var(--sobre-acc2,var(--sobre-acc));display:grid;place-items:center}
 .sticker svg{position:absolute;inset:0;width:100%;height:100%}
 .sticker text{font-family:var(--f-texto);font-weight:700;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;fill:var(--sobre-acc)}
 .sticker b{font-family:var(--f-display);font-weight:400;font-size:1.25rem;text-transform:uppercase;line-height:1;text-align:center;max-width:64px}
@@ -96,7 +96,7 @@ nav .links{display:none;gap:24px;font-weight:600;font-size:.9rem;letter-spacing:
 .sec{padding:110px 20px;position:relative}
 .wrap{max-width:1180px;margin:0 auto}
 h2{font-size:clamp(2.6rem,7vw,6rem);max-width:16ch}
-h2 em{font-style:normal;color:var(--acc)}
+h2 em{font-style:normal;color:var(--acc-t,var(--acc))}
 .lead{color:var(--ink2);font-size:1.1rem;max-width:52ch;margin:20px 0 0}
 
 /* Planes que se apilan */
@@ -143,7 +143,7 @@ html:not(.js) .comparar input{display:none}
 .horas{display:grid;gap:6px;margin-top:40px;padding:10px;border-radius:18px;background:#0a0a09;box-shadow:inset 0 0 0 1px rgba(var(--ink-rgb),.08)}
 .horas div{position:relative;display:flex;justify-content:space-between;gap:16px;padding:16px 18px;border-radius:10px;background:#1b1b19;font-family:var(--mono);font-size:clamp(.92rem,2.2vw,1.25rem);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
 .horas div::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.65)}
-.horas b{color:var(--acc);font-weight:600;text-align:right}
+.horas b{color:var(--acc-t,var(--acc));font-weight:600;text-align:right}
 .tablero-sec .nota{color:var(--ink2);margin:18px 0 0}
 
 /* Galería en columnas a distinta velocidad */

@@ -72,7 +72,7 @@ nav .tel{display:none;font-weight:600;text-decoration:none;font-size:.95rem;padd
 .pill{display:inline-flex;align-items:center;gap:9px;margin:0 0 22px;padding:7px 13px;border-radius:999px;background:var(--blanco);border:1px solid rgba(var(--ink-rgb),.08);font-size:.88rem;font-weight:600;color:var(--ink2)}
 .pill i{width:8px;height:8px;border-radius:50%;background:var(--acc)}
 .hero h1{font-size:clamp(2.35rem,5.6vw,4.6rem);line-height:1.02;font-weight:600;letter-spacing:-.045em;max-width:15ch;perspective:600px}
-.hero h1 em{font-style:normal;color:var(--acc);background:linear-gradient(rgba(var(--acc-rgb),.16),rgba(var(--acc-rgb),.16)) 0 90%/100% .3em no-repeat}
+.hero h1 em{font-style:normal;color:var(--acc-t,var(--acc));background:linear-gradient(rgba(var(--acc-rgb),.16),rgba(var(--acc-rgb),.16)) 0 90%/100% .3em no-repeat}
 .hero h1 .w{display:inline-block;transform-origin:50% 100%}
 .hero .sub{max-width:46ch;margin:22px 0 30px;color:var(--ink2);font-size:1.13rem}
 .hero .ctas{display:flex;flex-wrap:wrap;gap:12px}
@@ -103,7 +103,7 @@ nav .tel{display:none;font-weight:600;text-decoration:none;font-size:.95rem;padd
 
 /* ===== Secciones ===== */
 .sec{padding:110px 20px;position:relative}
-.kicker{display:inline-block;margin-bottom:14px;color:var(--acc);font-weight:600;font-size:.86rem;letter-spacing:.06em;text-transform:uppercase}
+.kicker{display:inline-block;margin-bottom:14px;color:var(--acc-t,var(--acc));font-weight:600;font-size:.86rem;letter-spacing:.06em;text-transform:uppercase}
 h2{font-size:clamp(1.95rem,4.2vw,3.2rem);line-height:1.06;max-width:19ch}
 .lead{color:var(--ink2);font-size:1.1rem;max-width:54ch;margin:16px 0 0}
 
@@ -121,18 +121,18 @@ html:not(.js) .indice,html:not(.js) .barra{display:none}
 .item .foto{border-radius:0;aspect-ratio:16/9}
 @media(min-width:1100px){.item{grid-template-columns:42% 1fr}.item .foto{aspect-ratio:auto;min-height:250px}}
 .item .texto{padding:22px 24px 22px}
-.item .n::before{counter-increment:esp;content:counter(esp,decimal-leading-zero);font-family:var(--f-display);font-weight:700;font-size:.85rem;color:var(--acc)}
+.item .n::before{counter-increment:esp;content:counter(esp,decimal-leading-zero);font-family:var(--f-display);font-weight:700;font-size:.85rem;color:var(--acc-t,var(--acc))}
 .item h3{font-size:1.45rem;margin:6px 0 6px}
 .item p{margin:0;color:var(--ink2)}
 .item .pie2{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(var(--ink-rgb),.08)}
 .item .precio{font-family:var(--f-display);font-weight:600}
-.link{display:inline-flex;align-items:center;min-height:44px;font-weight:600;color:var(--acc);text-decoration:none}.link:hover{text-decoration:underline}
+.link{display:inline-flex;align-items:center;min-height:44px;font-weight:600;color:var(--acc-t,var(--acc));text-decoration:none}.link:hover{text-decoration:underline}
 
 /* Quién atiende */
 .personas{display:grid;gap:16px;margin-top:36px}
 @media(min-width:700px){.personas{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}}
 .persona{display:flex;gap:18px;align-items:center;padding:20px;border-radius:var(--r);background:var(--blanco);border:1px solid rgba(var(--ink-rgb),.08)}
-.ini{position:relative;flex:0 0 64px;width:64px;height:64px;display:grid;place-items:center;border-radius:50%;background:rgba(var(--acc-rgb),.1);font-family:var(--f-display);font-weight:700;color:var(--acc)}
+.ini{position:relative;flex:0 0 64px;width:64px;height:64px;display:grid;place-items:center;border-radius:50%;background:rgba(var(--acc-rgb),.1);font-family:var(--f-display);font-weight:700;color:var(--acc-t,var(--acc))}
 .ini svg{position:absolute;inset:-4px;width:72px;height:72px;transform:rotate(-90deg)}.ini circle{fill:none;stroke:var(--acc);stroke-width:2;stroke-dasharray:1}
 .persona h3{font-size:1.12rem}.persona p{margin:2px 0 0;color:var(--ink2)}.persona small{color:var(--muted)}
 
@@ -192,7 +192,7 @@ html:not(.js) .indice,html:not(.js) .barra{display:none}
 .faq details{border-bottom:1px solid rgba(var(--ink-rgb),.1)}
 .faq summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:16px;align-items:center;padding:20px 0;font-family:var(--f-display);font-weight:600;font-size:1.12rem;letter-spacing:-.02em}
 .faq summary::-webkit-details-marker{display:none}
-.faq summary::after{content:"+";flex:0 0 32px;height:32px;display:grid;place-items:center;border-radius:50%;background:rgba(var(--acc-rgb),.1);color:var(--acc);font-size:1.3rem;transition:transform .35s}
+.faq summary::after{content:"+";flex:0 0 32px;height:32px;display:grid;place-items:center;border-radius:50%;background:rgba(var(--acc-rgb),.1);color:var(--acc-t,var(--acc));font-size:1.3rem;transition:transform .35s}
 .faq details[open] summary::after{transform:rotate(45deg)}
 .faq details p{margin:0 0 20px;color:var(--ink2);max-width:62ch}
 .lista-faq{margin-top:28px}

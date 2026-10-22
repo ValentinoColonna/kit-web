@@ -9,9 +9,10 @@
 [ ] Estilo de página elegido entre los cinco esqueletos (si hay otra web del mismo rubro, distinto del de esa).
 [ ] Página nueva generada desde el esqueleto o el prompt abierto, a partir del brief y la auditoría, adaptada al rubro.
 [ ] Corrección humana: leer todo, sacar lo que el dueño no dijo, revisar colores y orden.
-[ ] Validación (validar_sitio.py): PASA, sin placeholders. La versión definitiva, sin noindex.
+[ ] Validación (validar_sitio.py): superó las comprobaciones automáticas, sin placeholders, y se hizo a mano la lista que imprime al final. La versión definitiva, sin noindex.
+[ ] Cada botón tocado de verdad: WhatsApp abre el chat con el número del dueño, «Llamar» marca el teléfono correcto, el mapa abre la dirección.
 [ ] Gate visual: vista en escritorio y en celular (375 px); se lee sin zoom, WhatsApp se toca, el teléfono llama, el mapa abre. Capturas guardadas.
-[ ] Publicada en Netlify Drop (o similar) con HTTPS. Nombre del sitio legible.
+[ ] Publicada en Netlify Drop (carpeta webs/<negocio>-publicar/, o similar) con HTTPS. Nombre del sitio legible.
 [ ] Después: misma medición de PageSpeed y mismas capturas. Antes y después lado a lado.
 [ ] Dominio propio apuntado, solo si el dueño quiere y con copia de la web vieja guardada.
 [ ] Mensajes para ofrecérsela (paso 8, mensajes.md): los manda la persona, como mucho cuatro, y un «no» se respeta.

@@ -6,7 +6,7 @@ Uso:
     python3 auditar_web.py https://la-web-vieja.com [--salida auditoria.md] [--html]
     python3 auditar_web.py entrada/web-vieja.html [--salida auditoria.md] [--html]   (si el dueño pasa el archivo en vez del link)
 
-Mira lo que un cliente mira desde el celular y lo que Google mira: título, descripción, viewport, HTTPS,
+Revisión heurística del HTML (no una evaluación completa del sitio) de lo que importa a un cliente y a Google: título, descripción, viewport, HTTPS,
 teléfono y WhatsApp a un toque, dirección, horarios, redes, imágenes sin texto alternativo, peso de la página
 y tecnología visible. Sin dependencias externas (solo Python 3). No ejecuta JavaScript: si la web es una app
 que carga todo por JS, lo dice y el resultado es parcial.
@@ -150,7 +150,10 @@ def auditar(url):
             cuerpo, headers = cuerpo2, headers2
     if not cuerpo:
         p = Lector()
-        return h, "", "", p, [("ERROR", f"No se pudo cargar la web: {h['error'] or h['status']}. Revisá la dirección; si el dominio no responde, el negocio hoy no tiene web que funcione")], ""
+        h["fallo"] = True
+        return h, "", "", p, [("ERROR", f"No se pudo cargar la web: {h['error'] or h['status']}. No se pudo revisar nada. Probá de nuevo y revisá la dirección: un fallo de conexión no prueba que el negocio no tenga web")], ""
+    if h["status"] and h["status"] >= 400:
+        h["parcial"] = True
     return analizar(h, cuerpo)
 
 
@@ -162,9 +165,21 @@ def analizar(h, cuerpo):
     except Exception:
         pass
     texto = " ".join(p.texto)
-    texto_min = texto.lower()
-
+    texto_portada = texto
     hallazgos = []
+    # Primero se lee la página de contacto (si hay): los datos que están ahí no pueden figurar como faltantes.
+    contacto_leido = None
+    if not h.get("local"):
+        destino, q = pagina_de_contacto(p, h["url_final"] or h["url"])
+        if q is not None:
+            h["contacto"] = destino
+            contacto_leido = destino
+            p.links += [l for l in q.links if l not in p.links]
+            texto = texto + " | " + " ".join(q.texto)
+    texto_min = texto.lower()
+    if h.get("parcial"):
+        hallazgos.append(("ERROR", f"La dirección respondió con error HTTP {h['status']}: lo que sigue es de esa página de error, no de la web del negocio"))
+
     def falta(cond, msg_bien, msg_mal):
         hallazgos.append(("OK" if cond else "FALTA", msg_bien if cond else msg_mal))
 
@@ -174,7 +189,7 @@ def analizar(h, cuerpo):
         hallazgos.append(("INFO", "Archivo local: HTTPS y velocidad no se miden (hace falta el link publicado)"))
     else:
         falta(h["url_final"].startswith("https://") and not h.get("sin_https"), "Carga por HTTPS (candado)", "No carga por HTTPS: el navegador la marca como no segura")
-    falta(bool(p.viewport), f"Tiene viewport para celular ({p.viewport})", "No tiene viewport: en el celular se ve como una web de escritorio achicada")
+    falta(bool(p.viewport), f"Declara viewport para celular ({p.viewport}). Eso no prueba que se vea bien: hay que mirarla en un celular", "No declara viewport: es probable que en el celular se vea como una web de escritorio achicada (hay que mirarla en un celular)")
     falta(10 <= len(titulo) <= 70, f"Título: «{titulo}» ({len(titulo)} caracteres)", f"Título ausente o fuera de medida: «{titulo}» ({len(titulo)} caracteres; ideal 10 a 70)")
     falta(50 <= len(desc) <= 170, f"Descripción para Google: «{desc[:90]}…» ({len(desc)} caracteres)", f"Descripción para Google ausente o fuera de medida ({len(desc)} caracteres; ideal 50 a 170)")
     falta(len(p.h1) == 1, f"Un solo H1: «{p.h1[0][:80]}»" if p.h1 else "", f"{len(p.h1)} H1 (tiene que haber exactamente uno que diga qué es el negocio)")
@@ -193,7 +208,7 @@ def analizar(h, cuerpo):
     hallazgos.append(("INFO", f"Redes enlazadas: {len(redes)}" + (f" ({', '.join(sorted({urllib.parse.urlparse(r).netloc for r in redes}))})" if redes else "")))
     sin_alt = [i for i in p.imgs if not (i.get("alt") or "").strip()]
     falta(not sin_alt, f"{len(p.imgs)} imágenes, todas con texto alternativo", f"{len(sin_alt)} de {len(p.imgs)} imágenes sin texto alternativo (Google no sabe qué muestran)")
-    falta(bool(p.jsonld), "Tiene datos estructurados (JSON-LD)", "No tiene datos estructurados: Google no recibe nombre, dirección, horarios ni teléfono en formato que entiende")
+    falta(bool(p.jsonld), "Tiene datos estructurados (JSON-LD) en el HTML", "No se detectó JSON-LD en el HTML (puede estar cargado por JavaScript o en otro formato): conviene confirmarlo con la prueba de resultados enriquecidos de Google")
     falta(bool(p.lang), f"Idioma declarado: {p.lang}", "No declara el idioma de la página")
     kb = h["bytes"] / 1024
     falta(kb < 300, f"Página de {kb:.0f} KB de HTML", f"HTML de {kb:.0f} KB (pesado para una página de negocio)")
@@ -207,15 +222,10 @@ def analizar(h, cuerpo):
             tech.append(marca)
     if tech:
         hallazgos.append(("INFO", "Tecnología visible: " + ", ".join(tech)))
-    if len(texto) < 200:
+    if len(texto_portada) < 200:
         hallazgos.append(("AVISO", "Casi no hay texto en el HTML: puede ser una web que carga todo por JavaScript; esta auditoría es parcial"))
-    if not h.get("local"):
-        destino, q = pagina_de_contacto(p, h["url_final"] or h["url"])
-        if q is not None:
-            h["contacto"] = destino
-            p.links += [l for l in q.links if l not in p.links]
-            texto = texto + " | " + " ".join(q.texto)
-            hallazgos.append(("INFO", f"Se leyó también la página de contacto ({destino}) para sacar los datos del negocio"))
+    if contacto_leido:
+        hallazgos.append(("INFO", f"Se leyó también la página de contacto ({contacto_leido}): el teléfono, WhatsApp, dirección y horarios se buscaron en las dos páginas"))
     palabras = len(texto.split())
     hallazgos.append(("INFO", f"Texto visible: unas {palabras} palabras"))
     return h, titulo, desc, p, hallazgos, texto
@@ -266,7 +276,11 @@ def escribir(ruta, h, titulo, desc, p, hallazgos, texto):
     lineas = [f"# Auditoría de {h['url']}", "", f"Fecha: {time.strftime('%Y-%m-%d %H:%M')} · Estado HTTP: {h['status']} · URL final: {h['url_final']}", ""]
     if h.get("error"):
         lineas += [f"**No se pudo cargar:** {h['error']}", ""]
-    lineas += [f"**Resumen:** {ok} cosas bien · **{faltas} cosas que faltan** (abajo, marcadas FALTA).", "", "| Estado | Qué |", "|---|---|"]
+    if h.get("fallo"):
+        lineas += ["**Resumen:** no se pudo revisar la web, así que no hay resultados. No sirve para afirmar nada del negocio.", "", "| Estado | Qué |", "|---|---|"]
+    else:
+        parcial = " **Ojo: la dirección dio un error HTTP; este resumen no describe la web del negocio.**" if h.get("parcial") else ""
+        lineas += [f"**Resumen:** {ok} cosas bien · **{faltas} cosas que faltan** (abajo, marcadas FALTA).{parcial}", "", "| Estado | Qué |", "|---|---|"]
     for e, m in hallazgos:
         lineas.append(f"| {e} | {m} |")
     lineas += ["", "## Lo que dice la web (para el brief)", "", f"- **Título:** {titulo or '(vacío)'}", f"- **Descripción:** {desc or '(vacía)'}", f"- **H1:** {' / '.join(p.h1) or '(ninguno)'}", f"- **H2:** {' / '.join(x for x in p.h2 if x)[:300] or '(ninguno)'}", "", "Primeras 600 letras del texto visible:", "", "> " + texto[:600].replace("\n", " "), ""]
@@ -281,7 +295,7 @@ def escribir(ruta, h, titulo, desc, p, hallazgos, texto):
     ruta_txt = base + "-texto-web-vieja.txt"
     with open(ruta_txt, "w", encoding="utf-8") as f:
         f.write(texto)
-    lineas += ["", f"El texto visible completo quedó en `{os.path.basename(ruta_txt)}`, para armar el brief.", "", "## Cómo usar esto", "", "Cada FALTA es un punto para el brief y para la página nueva. Las INFO son contexto. Lo que la web dice del negocio se confirma con el dueño antes de reutilizarlo."]
+    lineas += ["", f"El texto visible completo quedó en `{os.path.basename(ruta_txt)}`, para armar el brief.", "", "## Cómo usar esto", "", "Cada FALTA es un punto para el brief y para la página nueva. Las INFO son contexto. Esta es una revisión heurística del HTML de la portada (y de la página de contacto, si la hay): no mide cómo se ve ni cómo anda en un celular, ni cómo la ve Google. Lo que la web dice del negocio se confirma con el dueño antes de reutilizarlo, y cada FALTA se mira a mano en la web antes de decírsela a nadie."]
     with open(ruta, "w", encoding="utf-8") as f:
         f.write("\n".join(lineas) + "\n")
     return ok, faltas
@@ -305,7 +319,14 @@ def escribir_html(ruta, h, titulo, hallazgos):
         f'<li class="{ "falta" if e == "FALTA" else "ok" if e == "OK" else "info"}"><span class="punto"></span>{esc(m)}</li>'
         for e, m in hallazgos
     )
-    teaser_html = "".join(f"<li>{esc(t)}</li>" for t in teaser) or "<li>Nada grave: la web está bien de base.</li>"
+    if h.get("fallo"):
+        teaser, cuerpo_resumen = [], "<li>No se pudo cargar la web, así que no hay nada que concluir. Volvé a intentarlo y revisá la dirección.</li>"
+    elif h.get("parcial"):
+        teaser, cuerpo_resumen = [], "<li>La dirección respondió con un error: esta revisión no describe la web del negocio.</li>"
+    else:
+        cuerpo_resumen = "".join(f"<li>{esc(t)}</li>" for t in teaser) or "<li>La revisión automática no encontró faltas en la portada. No es una evaluación completa: mirá la web a mano.</li>"
+    teaser_html = cuerpo_resumen
+    sin_datos = bool(h.get("fallo") or h.get("parcial"))
     doc = f"""<!DOCTYPE html><html lang="es-AR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Auditoría de {esc(h['url'])}</title>
 <style>
@@ -321,10 +342,10 @@ footer{{color:var(--neutro);font-size:.85rem;margin-top:32px}}
 </style></head><body><main>
 <h1>Lo que le falta a la web de {esc(titulo if titulo and len(titulo) <= 50 else urllib.parse.urlparse(h['url']).netloc.replace('www.', ''))}</h1>
 <p class="sub">{esc(h['url'])} · revisada el {time.strftime('%d/%m/%Y %H:%M')} · estado HTTP {esc(str(h['status']))}</p>
-<div class="resumen"><div class="caja mal"><b>{len(faltas)}</b>cosas que faltan</div><div class="caja ok"><b>{len(ok)}</b>cosas bien</div><div class="caja"><b>{len(infos)}</b>observaciones</div></div>
-<h2>Lo primero que le cuesta clientes</h2><div class="teaser"><ul>{teaser_html}</ul></div>
+{"" if sin_datos else f'<div class="resumen"><div class="caja mal"><b>{len(faltas)}</b>cosas que faltan</div><div class="caja ok"><b>{len(ok)}</b>cosas bien</div><div class="caja"><b>{len(infos)}</b>observaciones</div></div>'}
+<h2>{"Qué pasó" if sin_datos else "Lo primero que le cuesta clientes"}</h2><div class="teaser"><ul>{teaser_html}</ul></div>
 <h2>Todo lo revisado</h2><ul>{filas}</ul>
-<footer>Revisión automática de la página de inicio, como la ve un cliente desde el celular y como la lee Google. No mide ventas ni posiciones. Hecha con el kit abierto «rehacer-web».</footer>
+<footer>Revisión heurística y automática del HTML de la página de inicio (y de la de contacto, si la hay). No es una evaluación completa del sitio: no mide cómo se ve en un celular, ni la velocidad real, ni las ventas ni las posiciones en Google. Hecha con el kit abierto «rehacer-web».</footer>
 </main></body></html>"""
     with open(ruta, "w", encoding="utf-8") as f:
         f.write(doc)

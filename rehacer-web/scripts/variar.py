@@ -5,7 +5,7 @@
 Uso:
     python3 variar.py --esqueleto aire --rubro "veterinaria"
     python3 variar.py --esqueleto pulso --rubro gimnasio --semilla 7
-    python3 variar.py --chequear          # contraste de todas las paletas (4,5:1)
+    python3 variar.py --chequear          # contraste (4,5:1) de todas las paletas, en cada rol de texto
 
 Lee la última web de webs/ (su brief.md, la línea «variar: …») y no repite su combinación.
 Imprime: las líneas para el brief, los atributos de <body> (slot {{VARIACION}}),
@@ -77,16 +77,57 @@ def sobre_acento(acc):
     return max(('#ffffff', '#000000'), key=lambda c: contraste(c, acc))
 
 
+MINIMO = 4.5
+
+
+def legible(color, fondos, hacia):
+    """El color más parecido al pedido que llega a 4,5:1 sobre todos los fondos: si no llega, se acerca de a poco a `hacia` (la tinta)."""
+    if all(contraste(color, f) >= MINIMO for f in fondos):
+        return color
+    for paso in range(1, 21):
+        c = mezclar(color, hacia, paso / 20)
+        if all(contraste(c, f) >= MINIMO for f in fondos):
+            return c
+    return hacia
+
+
+def derivados(p):
+    """Todos los colores que usan los esqueletos para texto, ya garantizados a 4,5:1 sobre los fondos donde se apoyan."""
+    osc = oscura(p)
+    bg, ink, sup = p['fondo'], p['texto'], p['superficie']
+    fondo2 = sup if osc else mezclar(bg, ink, .06)
+    fondos = (bg, fondo2, sup)
+    d = {'bg': bg, 'fondo2': fondo2, 'sup': sup, 'ink': ink, 'acc': p['acento'], 'acc2': p['acento2'], 'fondos': fondos}
+    d['ink2'] = legible(mezclar(ink, bg, .28), fondos, ink)
+    d['muted'] = legible(mezclar(ink, bg, .45), fondos, ink)
+    d['acc_t'] = legible(p['acento'], fondos, ink)       # el acento cuando se usa como color de texto
+    d['acc2_t'] = legible(p['acento2'], fondos, ink)
+    d['sobre_acc'] = sobre_acento(p['acento'])
+    d['sobre_acc2'] = sobre_acento(p['acento2'])
+    return d
+
+
+def roles(d):
+    """(nombre, texto, fondo) de cada combinación de texto que generan los esqueletos."""
+    r = []
+    for nombre, fondo in (('fondo', d['bg']), ('fondo2', d['fondo2']), ('superficie', d['sup'])):
+        r += [('ink/' + nombre, d['ink'], fondo), ('ink2/' + nombre, d['ink2'], fondo), ('muted/' + nombre, d['muted'], fondo),
+              ('acento-texto/' + nombre, d['acc_t'], fondo), ('secundario-texto/' + nombre, d['acc2_t'], fondo)]
+    r += [('sobre-acento/acento', d['sobre_acc'], d['acc']), ('sobre-secundario/secundario', d['sobre_acc2'], d['acc2'])]
+    return r
+
+
 def chequear(paletas):
     malas = 0
+    print('Roles que se chequean en cada paleta (mínimo %.1f:1): ink, ink2, muted, acento-texto y secundario-texto sobre fondo, fondo2 y superficie; '
+          'sobre-acento sobre el acento; sobre-secundario sobre el secundario.\n' % MINIMO)
     for p in paletas:
-        t = contraste(p['texto'], p['fondo'])
-        s = contraste(p['texto'], p['superficie'])
-        b = contraste(sobre_acento(p['acento']), p['acento'])
-        ok = min(t, s, b) >= 4.5
+        rs = roles(derivados(p))
+        peor = min(rs, key=lambda x: contraste(x[1], x[2]))
+        c = contraste(peor[1], peor[2])
+        ok = c >= MINIMO
         malas += not ok
-        print('%s %-22s texto/fondo %5.2f  texto/superficie %5.2f  botón/acento %5.2f' % (
-            'ok ' if ok else 'MAL', p['id'], t, s, b))
+        print('%s %-22s peor rol: %-30s %5.2f' % ('ok ' if ok else 'MAL', p['id'], peor[0], c))
     print('\n%d paletas, %d no llegan a 4,5:1' % (len(paletas), malas))
     return malas == 0
 
@@ -125,10 +166,10 @@ def sortear(esqueleto, rubro, paletas, previa, rnd):
 
 def salida(esqueleto, c, p):
     osc = esqueleto in OSCUROS
-    acc, ink, bg = p['acento'], p['texto'], p['fondo']
-    fondo2 = p['superficie'] if osc else mezclar(bg, ink, .06)
-    raiz = '--ink:%s;--ink-rgb:%s;--ink2:%s;--muted:%s' % (
-        ink, ','.join(map(str, hex_rgb(ink))), mezclar(ink, bg, .28), mezclar(ink, bg, .45))
+    d = derivados(p)
+    acc, ink, bg, fondo2 = p['acento'], p['texto'], p['fondo'], d['fondo2']
+    raiz = '--ink:%s;--ink-rgb:%s;--ink2:%s;--muted:%s;--acc-t:%s;--acc2-t:%s;--sobre-acc2:%s' % (
+        ink, ','.join(map(str, hex_rgb(ink))), d['ink2'], d['muted'], d['acc_t'], d['acc2_t'], d['sobre_acc2'])
     if not osc:
         raiz += ';--blanco:%s;--blanco-rgb:%s;--papel:%s' % (
             p['superficie'], ','.join(map(str, hex_rgb(p['superficie']))), p['superficie'])
@@ -145,7 +186,7 @@ def salida(esqueleto, c, p):
     print('\n== Slots de color del esqueleto ==')
     for k, v in (('FONDO', bg), ('FONDO_RGB', ','.join(map(str, hex_rgb(bg)))), ('FONDO2', fondo2),
                  ('ACENTO', acc), ('ACENTO_RGB', ','.join(map(str, hex_rgb(acc)))),
-                 ('ACENTO_CLARO', mezclar(acc, '#ffffff', .35)), ('TEXTO_SOBRE_ACENTO', sobre_acento(acc)),
+                 ('ACENTO_CLARO', mezclar(acc, '#ffffff', .35)), ('TEXTO_SOBRE_ACENTO', d['sobre_acc']),
                  ('SECUNDARIO', p['acento2']), ('SECUNDARIO_RGB', ','.join(map(str, hex_rgb(p['acento2']))))):
         print('%s: %s' % (k, v))
 

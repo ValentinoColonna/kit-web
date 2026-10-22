@@ -39,7 +39,7 @@ Después: `python3 rehacer-web/scripts/validar_sitio.py webs/<negocio>/index.htm
 
 Para que dos webs del mismo esqueleto no se vean iguales, los cinco traen al final del `<style>` el mismo bloque `variar:inicio … variar:fin`. Lo activan dos slots, y los llena `scripts/variar.py --esqueleto <nombre> --rubro "<rubro>"`:
 - `{{VARIACION}}` en `<body>`: los atributos `data-btn` (pildora, recto, corte, subrayado, grueso), `data-cta` (izq, centro, fijo: la barra de WhatsApp a lo ancho abajo en el celular), `data-esq` (0, chica, grande), `data-marco` de las fotos (recto, arco, circulo, diagonal, organico), `data-sep` entre secciones (recto, ola, diagonal, zigzag) y `data-hero`.
-- `{{PALETA_ROOT}}` en el bloque: texto, texto secundario y superficie de la paleta sorteada. Los slots de color de siempre (`FONDO`, `ACENTO`…) se llenan con los valores que imprime el mismo script.
+- `{{PALETA_ROOT}}` en el bloque: texto, texto secundario, el color «apagado» (`--muted`), los acentos usados como texto (`--acc-t`, `--acc2-t`) y el texto sobre el secundario (`--sobre-acc2`), todos ya ajustados a 4,5:1 de contraste sobre los fondos donde se apoyan, más la superficie de la paleta sorteada. Los slots de color de siempre (`FONDO`, `ACENTO`…) se llenan con los valores que imprime el mismo script.
 
 Hero que aplica a cada uno sin romper su animación: **Aire** izq, centro, partido · **Noche** izq, centro, fondo · **Mantel** izq, centro · **Vidriera** izq, centro · **Pulso** solo izq (las letras gigantes ya ocupan el ancho). Las paletas (60, en `references/paletas.json`) se filtran por esqueleto: claras para Aire, Mantel y Vidriera; oscuras para Noche y Pulso. Con los colores del negocio, se borra `{{PALETA_ROOT}}` y se usan los suyos: los factores se mantienen. Si se borra `{{VARIACION}}`, el esqueleto se ve como en la 1.5.
 
@@ -61,7 +61,7 @@ Hero que aplica a cada uno sin romper su animación: **Aire** izq, centro, parti
 
 El link completo es `https://fonts.googleapis.com/css2?` + la columna + `&display=swap`. En las variables va el nombre de la familia entre comillas: `--f-display:"Playfair Display",Georgia,serif`.
 
-**Los slots se llaman igual en los cinco:** `NOMBRE`, `WHATSAPP`, `MENSAJE_PREARMADO_URLENCODED`, `TELEFONO_TEL`, `DIRECCION_CORTA`, `HORARIOS`, `CONTADOR_1_NUMERO`, `ITEM_1_NOMBRE`, `ALT_GALERIA_1` y el resto. Lo que cambia es dónde aparecen.
+**Los slots se llaman igual en los cinco:** `NOMBRE`, `WHATSAPP`, `MENSAJE_PREARMADO_URLENCODED`, `TELEFONO_TEL`, `DIRECCION_CORTA`, `HORARIOS` (en Vidriera, además, `ZONA_HORARIA`: la del negocio, p. ej. `America/Argentina/Buenos_Aires`; el cartel ABIERTO/CERRADO la usa y entiende los horarios que cruzan la medianoche), `CONTADOR_1_NUMERO`, `ITEM_1_NOMBRE`, `ALT_GALERIA_1` y el resto. Lo que cambia es dónde aparecen.
 
 **Los horarios llevan siempre el mismo formato:** una fila `<div><span>Lunes a viernes</span><b>9 a 19</b></div>` por línea. Aire y Vidriera además leen `data-dias` (0 domingo … 6 sábado) para resaltar «hoy». Vidriera lee también `data-abre` y `data-cierra` en 24 h, y con eso el cartel dice ABIERTO o CERRADO.
 

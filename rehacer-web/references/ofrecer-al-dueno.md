@@ -35,6 +35,7 @@ Después del cuarto no se insiste.
 - **«No me interesa»** → «Gracias por mirarla. La borro.» Y se borra.
 
 ## Reglas
+- Antes de nombrar un hallazgo, comprobalo a mano en la web del negocio: el auditor es heurístico (solo lee el HTML) y puede equivocarse. Un «no tienen WhatsApp» que es falso quema la conversación.
 - Solo hallazgos reales de la auditoría. Nada inventado: ni cifras, ni casos, ni «otros negocios de la zona ya lo hicieron».
 - Sin urgencia ni escasez inventadas («solo esta semana», «quedan dos lugares»).
 - Sin promesas de ventas ni de posiciones en Google.

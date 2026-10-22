@@ -7,7 +7,8 @@ Se completa con el dueño, en 10 minutos. Lo que no sabe, queda en blanco: **no 
 - **Qué vende o qué hace** (una frase, como se lo contaría a un vecino):
 - **A quién** (particulares, empresas, barrio, ciudad, zona):
 - **Dónde** (dirección completa; si atiende a domicilio o por zona, decirlo):
-- **Horarios** (días y horas):
+- **Horarios** (días y horas de apertura y de cierre; si cierra de madrugada, decirlo):
+- **Zona horaria del negocio** (solo si la página tendrá el cartel ABIERTO/CERRADO, estilo Vidriera; Argentina: `America/Argentina/Buenos_Aires`):
 - **Enlace de Google Maps** (si lo tiene):
 
 ## Contacto

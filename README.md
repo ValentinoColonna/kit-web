@@ -8,7 +8,7 @@ Lo que te llevás del video de Valentino IA, sin pedir nada a cambio. Abrís la 
 2. Escribí **«hola»** y pasale el link de la web actual. Si no tenés link, dejá el `.html` en `entrada/`; si el negocio no tiene web, decile el nombre y el rubro.
 3. Contestá lo que te pregunte y dejá el logo y las fotos en `entrada/` si las tenés. Al final te dice qué carpeta arrastrar a Netlify Drop.
 
-Funciona con Sonnet. Necesitás Python 3 (en Mac ya viene) y Google Chrome para las capturas de revisión. La guía corta está en `EMPIEZA-AQUI.md`.
+Está pensado para que alcance con Sonnet (no hace falta el modelo más caro), pero **el resultado depende del modelo y siempre hay que revisarlo**: es un punto de partida, no una web lista para vender sin mirarla. Necesitás Python 3 (en Mac ya viene) y Google Chrome para las capturas de revisión; el primer paso del kit lo chequea y te dice qué hacer si falta algo. La guía corta está en `EMPIEZA-AQUI.md`.
 
 ## Qué hay adentro
 
@@ -18,12 +18,13 @@ Funciona con Sonnet. Necesitás Python 3 (en Mac ya viene) y Google Chrome para 
 | La skill `rehacer-web` | `rehacer-web/SKILL.md` | Los ocho pasos: auditar, brief, fotos, generar, validar, publicar, medir y ofrecérsela al dueño |
 | Carpetas de trabajo | `entrada/` y `webs/` | Lo que traés (HTML, logo, fotos) y cada web nueva, en su carpeta |
 | Auditor de la web vieja | `rehacer-web/scripts/auditar_web.py` | Te dice qué tiene y qué le falta a la web actual (celular, WhatsApp, Google, peso). Con `--html` genera un informe visual para mostrarle al dueño y el «teaser»: los 3 hallazgos para abrir la conversación |
-| Buscador de fotos | `rehacer-web/scripts/buscar_fotos.py` | Baja las fotos que el negocio ya publicó en su propia web (galería, productos, fichas) y arma una hoja de contactos para elegir. No toca Google Maps ni Instagram |
-| Validador de la web nueva | `rehacer-web/scripts/validar_sitio.py` | Chequea el `index.html` antes de publicarlo |
+| Buscador de fotos | `rehacer-web/scripts/buscar_fotos.py` | Baja las fotos que el negocio ya publicó en su propia web (galería, productos, fichas) y arma una hoja de contactos para elegir. Solo desde direcciones públicas (http/https), con tope de solicitudes y de tiempo; marca cuáles fotos vienen de otro host. No toca Google Maps ni Instagram |
+| Validador de la web nueva | `rehacer-web/scripts/validar_sitio.py` | Comprobaciones automáticas del `index.html` (no garantizan que esté lista: al final lista lo que se revisa a mano) |
+| Chequeo del entorno | `rehacer-web/scripts/chequear_entorno.py` | Python, Chrome y cómo achicar fotos, con qué hacer si falta algo |
 | Medidor de PageSpeed | `rehacer-web/scripts/medir_pagespeed.py` | El antes y el después, con clave gratuita de Google o a mano |
 | Brief | `rehacer-web/references/brief-plantilla.md` | Las diez preguntas para el dueño |
 | Prompt de espectáculo (el principal) | `rehacer-web/references/prompt-web-nueva-espectaculo.md` | Scrolling deslumbrante con GSAP: hero con máscara, sección pineada, contadores, fotos integradas con parallax y banda con tilt, magnéticos |
-| Cinco esqueletos con la mecánica hecha | `rehacer-web/plantilla/` + `COMO-USAR-EL-ESQUELETO.md` | Para que cualquier modelo (Sonnet, ChatGPT, Codex) rinda igual y las webs no salgan iguales: **Noche** (autos y oficios), **Mantel** (gastronomía), **Aire** (salud y profesionales), **Pulso** (gimnasio, barbería, estética) y **Vidriera** (tiendas). Cada uno con su hero, su orden, su tipografía y sus animaciones; el modelo completa los slots {{...}} y adapta al rubro. Claude te propone el del rubro y te deja elegir |
+| Cinco esqueletos con la mecánica hecha | `rehacer-web/plantilla/` + `COMO-USAR-EL-ESQUELETO.md` | Con la mecánica ya hecha, el modelo solo completa contenido (no se probó con otros modelos, ni hay una comparación entre ellos) y las webs no salen iguales: **Noche** (autos y oficios), **Mantel** (gastronomía), **Aire** (salud y profesionales), **Pulso** (gimnasio, barbería, estética) y **Vidriera** (tiendas). Cada uno con su hero, su orden, su tipografía y sus animaciones; el modelo completa los slots {{...}} y adapta al rubro. Claude te propone el del rubro y te deja elegir |
 | Gate visual | `rehacer-web/references/gate-visual.md` | Cuatro renders con Chrome headless (escritorio y celular, con y sin JS) y checklist de cierre |
 | Prompt sobrio | `rehacer-web/references/prompt-web-nueva.md` | Versión mínima sin librerías, por si el negocio la pide |
 | Cómo publicar | `rehacer-web/references/publicar-netlify.md` | Netlify Drop, gratis, y dominio propio |
@@ -37,12 +38,26 @@ python3 rehacer-web/scripts/auditar_web.py https://la-web-vieja.com --html
 python3 rehacer-web/scripts/validar_sitio.py webs/<negocio>/index.html
 python3 rehacer-web/scripts/medir_pagespeed.py https://la-web-nueva.netlify.app --etiqueta despues
 ```
+(En Windows, `python` en vez de `python3`.)
+
+## Pruebas del kit (para quien lo modifica)
+
+Un solo comando, desde la carpeta del kit, con la biblioteca estándar de Python:
+
+```
+python3 -m unittest discover -s tests -v
+```
+
+Cubren el validador, el auditor (contra una web ficticia en localhost), el buscador de fotos, el contraste de las 60 paletas y, si hay Google Chrome, el JavaScript de Vidriera (filtros, «sumar a la consulta», movimiento reducido, horario con reloj simulado) y la sintaxis del JavaScript de los cinco esqueletos. Sin Chrome, esas últimas se saltan y lo dicen. Todo con datos ficticios. Lo que no cubren y lo que queda pendiente está en `PENDIENTES.md`.
 
 ## En otras herramientas (todavía sin probar)
 Lo probado es Claude Code. La skill sigue el formato estándar de skills, así que debería servir en otros lados, pero no lo comprobamos:
 - **Claude.ai:** Customize → Skills → subir la carpeta `rehacer-web` como ZIP.
 - **Codex u otro agente:** copiar `rehacer-web/` en la carpeta de skills del proyecto.
 - **ChatGPT:** pegar `rehacer-web/SKILL.md` como instrucciones de un proyecto, junto con el esqueleto y el brief.
+
+## Estado: beta
+Es un kit para armar y revisar propuestas de páginas estáticas. Lo que el validador y el auditor dicen son comprobaciones automáticas sobre el HTML; no reemplazan mirar la página, tocar los botones y confirmar los datos con el dueño. «Gratis» para publicar tiene condiciones: el plan gratuito de Netlify tiene cuotas mensuales y puede pausar el sitio si se agotan.
 
 ## Qué no hace
 - No inventa datos del negocio: lo que el dueño no dijo, no va.

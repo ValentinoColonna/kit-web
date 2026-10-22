@@ -30,6 +30,7 @@ Dónde se ve cada una según el esqueleto:
 Mismo componente, distinto contenido: concesionaria → vehículos (marca, modelo, año, «consultar»); restaurante → platos (nombre, descripción corta, precio real); clínica → especialidades o profesionales; estética → servicios con precio; tienda → productos. Cada tarjeta: foto con velo de la paleta, título, una línea, y el CTA de WhatsApp con mensaje prearmado que nombra el ítem. Sin precios inventados: si el brief no tiene precio, «Consultar».
 
 ## Preparar las fotos en la Mac (sin instalar nada)
+`sips` existe **solo en Mac**. En Windows o Linux: abrí cada foto en Fotos, Paint o GIMP, achicala a 1600 px de ancho como máximo (nunca la agrandes) y guardala como JPG con calidad 80; o, con ImageMagick, `magick foto.jpg -resize 1600x -quality 80 assets/salon.jpg`.
 **Nunca agrandes una foto:** una foto chica estirada pesa más y se ve igual de borrosa.
 ```
 sips -g pixelWidth -g pixelHeight foto.jpg                                      # tamaño

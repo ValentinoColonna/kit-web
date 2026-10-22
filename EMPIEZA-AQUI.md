@@ -10,9 +10,14 @@ Rehacé la web de un negocio con IA: la auditás, la IA arma la página nueva co
 
 ## Qué necesitás
 
-- Claude Code con tu cuenta de Claude. Funciona con Sonnet; no hace falta el modelo más caro.
-- Python 3 (en Mac ya viene; en Windows, desde python.org). No hay que instalar nada más.
+- Claude Code con tu cuenta de Claude. Está pensado para que alcance con Sonnet; igual, revisá siempre lo que genera.
+- Python 3 (en Mac ya viene; en Windows, desde python.org, marcando «Add python.exe to PATH»). No hay que instalar nada más.
 - Google Chrome, para las capturas de revisión.
-- Para publicar: una cuenta gratis de Netlify.
+- Para publicar: una cuenta gratis de Netlify (el plan gratis tiene cuotas mensuales; si se agotan, pausa el sitio).
+
+**Si falta algo:** lo primero que hace el kit es chequear Python y Chrome, y te dice qué instalar. Sin Chrome igual podés seguir, pero la revisión de la página la hacés vos abriendo `index.html`.
+
+## Cómo se publica
+Claude te deja una carpeta `webs/<negocio>-publicar/` con solo `index.html` y las fotos. Entrá a https://app.netlify.com/drop y arrastrala. Antes de publicar, tocá vos cada botón (WhatsApp, llamar, mapa) y confirmá los datos con el dueño.
 
 Todo lo demás está en `README.md`. No hace falta leerlo: preguntale a Claude.

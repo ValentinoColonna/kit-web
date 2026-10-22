@@ -14,17 +14,24 @@ Descarta íconos, flechas, miniaturas chicas y repetidas; separa el logo. Deja e
   - index.html (hoja de contactos para mirarlas todas juntas).
 No elige ninguna: elegir es mirar cada foto (ver SKILL.md, paso 3).
 
-Solo baja fotos del sitio del negocio. No toca Google Maps, Instagram ni buscadores: Google no permite
+Baja las fotos que las páginas del negocio muestran. Las que están en el propio sitio (o sus subdominios) van
+marcadas «propio»; las que vienen de otro host (un CDN, un servicio de fotos) van marcadas «externo» y hay que
+confirmar que sean del negocio antes de usarlas. No toca Google Maps, Instagram ni buscadores: Google no permite
 descargar y volver a publicar las fotos de Maps (y muchas las suben clientes, no el negocio), e Instagram
 bloquea las descargas automáticas. Esas fotos las pasa el dueño.
+Límites de seguridad: solo http y https; nunca direcciones internas (localhost, 127.x, 10.x, 192.168.x, 169.254.x, etc.),
+tampoco después de una redirección; un presupuesto global de solicitudes y de tiempo (--max-solicitudes, --max-segundos).
+No protege contra un DNS que cambie de respuesta entre la comprobación y la descarga.
 Solo Python 3, sin dependencias. Una página o una foto por vez, con pausa, y con tope de páginas y fotos.
 """
 import argparse
 import hashlib
 import html
+import ipaddress
 import json
 import os
 import re
+import socket
 import ssl
 import struct
 import sys
@@ -40,12 +47,90 @@ UI = r"icon|arrow|flecha|loading|spinner|sprite|favicon|btn|boton|button|blank|p
 EXT = r"\.(?:jpe?g|png|webp)(?:\?[^\"'()\s<>]*)?"
 
 
+def resolver(host):
+    """Direcciones IP de un nombre (se reemplaza en las pruebas)."""
+    try:
+        return [i[4][0] for i in socket.getaddrinfo(host, None)]
+    except OSError:
+        return []
+
+
+def _publica(ip):
+    a = ipaddress.ip_address(str(ip).split("%")[0])
+    if getattr(a, "ipv4_mapped", None):
+        a = a.ipv4_mapped
+    return a.is_global
+
+
+def destino_permitido(url):
+    """Solo http(s) hacia direcciones públicas. Localhost, redes privadas, link-local y reservadas se rechazan."""
+    p = urllib.parse.urlparse(url.strip())
+    host = (p.hostname or "").lower()
+    if p.scheme not in ("http", "https") or not host:
+        return False
+    try:
+        ips = [ipaddress.ip_address(host)]
+    except ValueError:
+        try:
+            ips = [ipaddress.ip_address(socket.inet_ntoa(socket.inet_aton(host)))]  # 127.1, 2130706433…
+        except OSError:
+            ips = [ipaddress.ip_address(i.split("%")[0]) for i in resolver(host)]
+    if not ips:
+        return False
+    if os.environ.get("REHACER_PERMITIR_LOCAL") == "1" and all(i.is_loopback for i in ips):
+        return True  # solo para las pruebas del kit con un servidor ficticio en localhost
+    return all(_publica(i) for i in ips)
+
+
+def origen(url, host_negocio):
+    """«propio» si la foto está en el sitio del negocio (o un subdominio suyo); «externo» si viene de otro host (un CDN, por ejemplo)."""
+    h = (urllib.parse.urlparse(url).hostname or "").lower()
+    n = host_negocio.lower()
+    h, n = (h[4:] if h.startswith("www.") else h), (n[4:] if n.startswith("www.") else n)
+    return "propio" if h == n or h.endswith("." + n) else "externo"
+
+
+class Presupuesto:
+    """Tope global de solicitudes y de tiempo para toda la corrida."""
+    def __init__(self, max_solicitudes=150, max_segundos=120, reloj=time.monotonic):
+        self.max_solicitudes, self.max_segundos, self.reloj = max_solicitudes, max_segundos, reloj
+        self.inicio, self.usadas, self.agotado = reloj(), 0, False
+
+    def permitir(self):
+        if self.usadas >= self.max_solicitudes or self.reloj() - self.inicio > self.max_segundos:
+            self.agotado = True
+            return False
+        self.usadas += 1
+        return True
+
+    def segundos_restantes(self):
+        return max(1.0, self.max_segundos - (self.reloj() - self.inicio))
+
+
+class ManejadorRedirecciones(urllib.request.HTTPRedirectHandler):
+    """Cada salto de una redirección tiene que pasar la misma comprobación que la URL original."""
+    max_redirections = 5
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        destino = urllib.parse.urljoin(req.full_url, newurl)
+        if not destino_permitido(destino):
+            raise urllib.error.URLError("redirección a un destino no permitido: " + destino)
+        return super().redirect_request(req, fp, code, msg, headers, destino)
+
+
+PRESUPUESTO = Presupuesto()
+_OPENER = urllib.request.build_opener(ManejadorRedirecciones(), urllib.request.HTTPSHandler(context=ssl.create_default_context()))
+
+
 def bajar(url, binario=False):
-    ctx = ssl.create_default_context()
+    if not destino_permitido(url) or not PRESUPUESTO.permitir():
+        return url, None, b""
     req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept-Language": "es-AR,es;q=0.9"})
     try:
-        with urllib.request.urlopen(req, timeout=20, context=ctx) as r:
-            cuerpo = r.read(8_000_000)
+        with _OPENER.open(req, timeout=min(20, PRESUPUESTO.segundos_restantes())) as r:
+            if not destino_permitido(r.geturl()):
+                return url, None, b""
+            cuerpo = r.read(8_000_000 if binario else 3_000_000)
             return r.geturl(), r.status, cuerpo
     except Exception:
         return url, None, b""
@@ -139,15 +224,20 @@ def main():
     ap.add_argument("--salida", required=True, help="carpeta donde dejar las candidatas, por ejemplo webs/<negocio>/fotos-candidatas")
     ap.add_argument("--max-paginas", type=int, default=15)
     ap.add_argument("--max-fotos", type=int, default=80)
+    ap.add_argument("--max-solicitudes", type=int, default=150, help="tope global de solicitudes HTTP de toda la corrida")
+    ap.add_argument("--max-segundos", type=int, default=120, help="tope global de segundos de toda la corrida")
     ap.add_argument("--min-ancho", type=int, default=400, help="lado mayor mínimo para candidata; las de 300 a este valor van a chicas/ (píxeles)")
     a = ap.parse_args()
 
+    global PRESUPUESTO
+    PRESUPUESTO = Presupuesto(a.max_solicitudes, a.max_segundos)
     inicio = a.url if re.match(r"^https?://", a.url) else "https://" + a.url
     final, status, cuerpo = bajar(inicio)
     if not cuerpo:
-        print(f"ERROR  No se pudo abrir {inicio}")
+        print(f"ERROR  No se pudo abrir {inicio} (o es una dirección no permitida: solo sitios públicos por http/https)")
         sys.exit(1)
     host = urllib.parse.urlparse(final).netloc.replace("www.", "")
+    host_negocio = (urllib.parse.urlparse(final).hostname or host)
     cola, visitadas, paginas = [(9, final)], set(), []
     while cola and len(paginas) < a.max_paginas:
         cola.sort(key=lambda x: -x[0])
@@ -180,10 +270,14 @@ def main():
             candidatas.append({"url": img, "pagina": url, "titulo_pagina": titulo, "alt": alt, "logo": "logo" in nombre})
 
     os.makedirs(a.salida, exist_ok=True)
-    guardadas, hashes, descartes = [], {}, {"chicas": 0, "repetidas": 0, "fallidas": 0}
+    guardadas, hashes, descartes = [], {}, {"chicas": 0, "repetidas": 0, "fallidas": 0, "bloqueadas": 0}
     for c in candidatas:
-        if len(guardadas) >= a.max_fotos:
+        if len(guardadas) >= a.max_fotos or PRESUPUESTO.agotado:
             break
+        c["origen"] = origen(c["url"], host_negocio)
+        if not destino_permitido(c["url"]):
+            descartes["bloqueadas"] += 1
+            continue
         time.sleep(0.2)
         _, st, b = bajar(c["url"], binario=True)
         if not b:
@@ -213,10 +307,11 @@ def main():
         guardadas.append({**c, "archivo": archivo, "ancho": ancho, "alto": alto, "kb": round(len(b) / 1024), "chica": chica})
 
     with open(os.path.join(a.salida, "candidatas.json"), "w", encoding="utf-8") as f:
-        json.dump({"web": final, "paginas_leidas": [p[0] for p in paginas], "fotos": guardadas, "descartes": descartes}, f, ensure_ascii=False, indent=1)
+        json.dump({"web": final, "paginas_leidas": [p[0] for p in paginas], "fotos": guardadas, "descartes": descartes,
+                   "solicitudes": PRESUPUESTO.usadas, "presupuesto_agotado": PRESUPUESTO.agotado}, f, ensure_ascii=False, indent=1)
     def celdas_de(fotos):
         return "".join(
-        f'<figure><img src="{html.escape(g["archivo"])}" loading="lazy"><figcaption><b>{html.escape(g["archivo"])}</b> · {g["ancho"]}×{g["alto"]} · {g["kb"]} KB<br>{html.escape(g["titulo_pagina"][:60])}{(" · alt: " + html.escape(g["alt"][:50])) if g["alt"] else ""}</figcaption></figure>'
+        f'<figure><img src="{html.escape(g["archivo"])}" loading="lazy"><figcaption><b>{html.escape(g["archivo"])}</b> · {g["ancho"]}×{g["alto"]} · {g["kb"]} KB · {"propio" if g["origen"] == "propio" else "EXTERNO: " + html.escape(urllib.parse.urlparse(g["url"]).hostname or "?")}<br>{html.escape(g["titulo_pagina"][:60])}{(" · alt: " + html.escape(g["alt"][:50])) if g["alt"] else ""}</figcaption></figure>'
             for g in fotos)
     celdas = celdas_de([g for g in guardadas if not g["chica"]])
     chicas = [g for g in guardadas if g["chica"]]
@@ -227,7 +322,12 @@ def main():
 
     n_chicas = sum(1 for g in guardadas if g["chica"])
     print(f"LISTO  {len(guardadas) - n_chicas} fotos candidatas y {n_chicas} chicas (en chicas/) de {len(paginas)} páginas en {a.salida}/")
-    print(f"       Descartadas: {descartes['chicas']} miniaturas, {descartes['repetidas']} repetidas, {descartes['fallidas']} que no bajaron")
+    print(f"       Descartadas: {descartes['chicas']} miniaturas, {descartes['repetidas']} repetidas, {descartes['fallidas']} que no bajaron, {descartes['bloqueadas']} bloqueadas (dirección no permitida)")
+    externas = [g for g in guardadas if g["origen"] == "externo"]
+    print(f"       Origen: {len(guardadas) - len(externas)} del sitio del negocio, {len(externas)} de otros hosts" + (" (" + ", ".join(sorted({urllib.parse.urlparse(g['url']).hostname for g in externas})[:4]) + "): confirmar que sean del negocio" if externas else ""))
+    print(f"       Solicitudes: {PRESUPUESTO.usadas} de {a.max_solicitudes} permitidas")
+    if PRESUPUESTO.agotado:
+        print("AVISO  Se agotó el presupuesto de solicitudes o de tiempo: el resultado es parcial. Si hace falta más, volvé a correrlo con --max-solicitudes o --max-segundos más altos.")
     for g in guardadas:
         print(f"  {g['archivo']:34s} {g['ancho']:>5}×{g['alto']:<5} {g['titulo_pagina'][:50]}")
     print("Hoja de contactos: index.html. Ahora hay que mirarlas una por una antes de usar ninguna.")
