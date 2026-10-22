@@ -35,6 +35,14 @@ Tomá el archivo esqueleto-<nombre>.html. Completá todos los slots {{...}} con 
 
 Después: `python3 rehacer-web/scripts/validar_sitio.py webs/<negocio>/index.html`, que marca si quedó algún `{{…}}`, y el gate visual (`rehacer-web/references/gate-visual.md`). Con Claude Code no hace falta pegar este prompt: el kit lo hace solo cuando escribís «hola». La receta completa, para construir desde cero, está en `rehacer-web/references/prompt-web-nueva-espectaculo.md`.
 
+## Factores variables y paletas (1.5.1)
+
+Para que dos webs del mismo esqueleto no se vean iguales, los cinco traen al final del `<style>` el mismo bloque `variar:inicio … variar:fin`. Lo activan dos slots, y los llena `scripts/variar.py --esqueleto <nombre> --rubro "<rubro>"`:
+- `{{VARIACION}}` en `<body>`: los atributos `data-btn` (pildora, recto, corte, subrayado, grueso), `data-cta` (izq, centro, fijo: la barra de WhatsApp a lo ancho abajo en el celular), `data-esq` (0, chica, grande), `data-marco` de las fotos (recto, arco, circulo, diagonal, organico), `data-sep` entre secciones (recto, ola, diagonal, zigzag) y `data-hero`.
+- `{{PALETA_ROOT}}` en el bloque: texto, texto secundario y superficie de la paleta sorteada. Los slots de color de siempre (`FONDO`, `ACENTO`…) se llenan con los valores que imprime el mismo script.
+
+Hero que aplica a cada uno sin romper su animación: **Aire** izq, centro, partido · **Noche** izq, centro, fondo · **Mantel** izq, centro · **Vidriera** izq, centro · **Pulso** solo izq (las letras gigantes ya ocupan el ancho). Las paletas (60, en `references/paletas.json`) se filtran por esqueleto: claras para Aire, Mantel y Vidriera; oscuras para Noche y Pulso. Con los colores del negocio, se borra `{{PALETA_ROOT}}` y se usan los suyos: los factores se mantienen. Si se borra `{{VARIACION}}`, el esqueleto se ve como en la 1.5.
+
 ## Lo que tienen en común los cinco
 
 **Las fotos tienen nombres fijos** (`references/imagenes.md`): `hero-salon.jpg`, `salon.jpg`, `galeria-01.jpg` a `galeria-05.jpg` y `catalogo-01.jpg` en adelante. Pulso suma `antes.jpg` y `despues.jpg` para el antes y después. Si un archivo falta, el marco muestra un panel con su `data-nombre`. Para publicar, ese texto se cambia por uno para el público.
